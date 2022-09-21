@@ -1,0 +1,39 @@
+<?xml version="1.0"?>
+<robot xmlns:xacro="http://www.ros.org/wiki/xacro">
+
+  <!-- Chassis Properties -->
+  <xacro:property name="chassis_length" value="0.18" />
+  <xacro:property name="chassis_width" value="0.33" />
+  <xacro:property name="chassis_height" value="0.135" />
+  <xacro:property name="chassis_weight" value="2.45" />
+
+  <xacro:macro name="square_chassis" params="prefix">
+    <link name="base_link"></link>
+
+    <link name="${prefix}_chassis_link">
+      <xacro:inertial_box mass="${chassis_weight}" x="${chassis_length}" y="${chassis_width}" z="${chassis_height}">
+        <origin xyz="0 0 0" rpy="0 0 0" />
+      </xacro:inertial_box>
+      <visual>
+        <origin xyz="0 0 0" rpy="0 0 0" />
+        <geometry>
+          <mesh filename="package://swerve_description/meshes/SwerveChassis.stl" scale="0.001 0.001 0.001" />
+        </geometry>
+        
+      </visual>
+      <collision>
+        <origin xyz="0 0 0" rpy="0 0 0" />
+        <geometry>
+          <box size="${chassis_length} ${chassis_width} ${chassis_height}" />
+        </geometry>
+      </collision>
+    </link>
+
+    <joint name="${prefix}_chassis_joint" type="fixed">
+      <parent link="base_link" />
+      <child link="${prefix}_chassis_link" />
+      <origin xyz="0 0 0" rpy="0 0 0" />
+    </joint>
+  </xacro:macro>
+
+</robot>
