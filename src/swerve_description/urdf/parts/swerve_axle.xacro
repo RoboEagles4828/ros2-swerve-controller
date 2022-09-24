@@ -1,0 +1,45 @@
+<?xml version="1.0"?>
+<robot xmlns:xacro="http://www.ros.org/wiki/xacro">
+<!-- Temporary color to distinguish -->
+<material name="blue">
+    <color rgba="0 0 1 1"/>
+</material>
+
+  <!-- Chassis Properties -->
+  <xacro:property name="axle_length" value="0.075" />
+  <xacro:property name="axle_height" value=".1" />
+  <xacro:property name="axle_width" value="0.075" />
+  <xacro:property name="axle_weight" value="2.45" />
+
+  <xacro:macro name="swerve_axle" params="prefix parent *origin">
+    <link name="base_link"></link>
+
+    <link name="${prefix}_axle_link">
+      <xacro:inertial_box mass="${axle_weight}" x="${axle_length}" y="${axle_width}" z="${axle_height}">
+        <origin xyz="0 0 0" rpy="0 0 0"/>
+      </xacro:inertial_box>
+      <visual>
+        <origin xyz="0 0 0" rpy="0 0 0"/>
+        <geometry>
+          <mesh filename="package://swerve_description/meshes/SwerveAxle.stl" scale="0.001 0.001 0.001" />
+        </geometry>
+        <material name="blue"/>
+      </visual>
+      <collision>
+        <origin xyz="0 0 0" rpy="0 0 0"/>
+        <geometry>
+            <box size="${axle_length} ${axle_width} ${axle_height}" />
+        </geometry>
+      </collision>
+    </link>
+
+    <joint name="${prefix}_axle_joint" type="continuous">
+        <parent link="${parent}" />
+        <child link="${prefix}_axle_link" />
+        <xacro:insert_block name="origin" />
+        <axis xyz="0 0 1"/>
+        <dynamics friction="0.1"/>
+    </joint>
+  </xacro:macro>
+
+</robot>
