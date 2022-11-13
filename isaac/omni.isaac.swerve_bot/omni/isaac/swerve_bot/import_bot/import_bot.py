@@ -1,6 +1,6 @@
 import omni.graph.core as og
 import omni.usd
-from omni.isaac.Swerve_bot.base_sample import BaseSample
+from omni.isaac.swerve_bot.base_sample import BaseSample
 from omni.isaac.urdf import _urdf
 from omni.isaac.core.robots import Robot
 from omni.isaac.core.utils import prims
@@ -36,7 +36,7 @@ class ImportBot(BaseSample):
         self.robot_name = "Swerve"
         self.extension_path = os.path.abspath(__file__)
         self.project_root_path = os.path.abspath(os.path.join(self.extension_path, "../../../../../../.."))
-        self.path_to_urdf = os.path.join(self.project_root_path, "src/robot_description/Swerve.urdf")
+        self.path_to_urdf = os.path.join(self.project_root_path, "src/swerve_description/swerve.urdf")
         carb.log_info(self.path_to_urdf)
 
         self._robot_prim_path = self.import_robot(self.path_to_urdf)

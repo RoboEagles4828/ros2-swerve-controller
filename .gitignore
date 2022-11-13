@@ -52,3 +52,4 @@ CATKIN_IGNORE
 install
 log
 .vscode/browse*
+# __pycache__

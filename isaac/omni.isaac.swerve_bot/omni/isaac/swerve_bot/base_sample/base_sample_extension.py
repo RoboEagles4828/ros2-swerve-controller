@@ -14,7 +14,7 @@ from omni.kit.menu.utils import add_menu_items, remove_menu_items, MenuItemDescr
 import weakref
 from omni.isaac.ui.ui_utils import setup_ui_headers, get_style, btn_builder, scrolling_frame_builder
 import asyncio
-from omni.isaac.Swerve_bot.base_sample import BaseSample
+from omni.isaac.swerve_bot.base_sample import BaseSample
 from omni.isaac.core import World
 
 

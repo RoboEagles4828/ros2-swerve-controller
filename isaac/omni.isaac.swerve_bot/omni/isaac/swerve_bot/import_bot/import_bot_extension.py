@@ -7,8 +7,8 @@
 # license agreement from NVIDIA CORPORATION is strictly prohibited.
 
 import os
-from omni.isaac.Swerve_bot.base_sample import BaseSampleExtension
-from omni.isaac.Swerve_bot.import_bot.import_bot import ImportBot
+from omni.isaac.swerve_bot.base_sample import BaseSampleExtension
+from omni.isaac.swerve_bot.import_bot.import_bot import ImportBot
 
 
 class ImportBotExtension(BaseSampleExtension):

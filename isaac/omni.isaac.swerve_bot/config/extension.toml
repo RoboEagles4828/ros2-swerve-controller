@@ -39,7 +39,7 @@ writeTarget.kit = true
 
 
 [[python.module]]
-name = "omni.isaac.Swerve_bot.import_bot"
+name = "omni.isaac.swerve_bot.import_bot"
 
 [[test]]
 timeout = 960
