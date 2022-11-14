@@ -4,10 +4,10 @@
 
 
   <!-- Chassis Properties -->
-  <xacro:property name="chassis_length" value="0.75" />
-  <xacro:property name="chassis_width" value="0.75" />
-  <xacro:property name="chassis_height" value="0.1" />
-  <xacro:property name="chassis_weight" value="10.0" />
+  <xacro:property name="chassis_length" value=".7366" />
+  <xacro:property name="chassis_width" value=".7366" />
+  <xacro:property name="chassis_height" value=".9" />
+  <xacro:property name="chassis_weight" value="19.0508795" />
 
   <xacro:macro name="square_chassis" params="prefix">
     <link name="base_link"></link>
@@ -24,9 +24,9 @@
         <material name="red"/>
       </visual>
       <collision>
-        <origin xyz="0 ${chassis_height / 2} 0" rpy="0 0 0" />
+        <origin xyz="${-chassis_length/2} -0.005 ${-chassis_width/2}" rpy="0 0 0" />
         <geometry>
-            <box size="${chassis_length} ${chassis_height} ${chassis_width}" />
+            <mesh filename="package://swerve_description/meshes/contact_mesh_chasis.stl" scale="0.001 0.001 0.001" />
         </geometry>
       </collision>
     </link>
