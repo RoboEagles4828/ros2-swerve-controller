@@ -24,12 +24,6 @@
                 </geometry>
                 <material name="blue" />
             </visual>
-            <collision>
-                <origin xyz="0 0 0" rpy="0 0 0" />
-                <geometry>
-                    <mesh filename="package://swerve_description/meshes/SwerveAxle.stl" scale="0.001 0.001 0.001" />
-                </geometry>
-            </collision>
             <xacro:inertial_cylinder mass="${axle_mass}" radius="${axle_radius}" length="${wheel_length}" >
                 <origin xyz="0 0 0" rpy="0 0 0" />
             </xacro:inertial_cylinder>
