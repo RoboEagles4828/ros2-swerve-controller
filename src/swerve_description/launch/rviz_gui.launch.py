@@ -17,18 +17,18 @@ def generate_launch_description():
     # Process the URDF file
     pkg_path = os.path.join(get_package_share_directory('swerve_description'))
     xacro_file = os.path.join(pkg_path,'urdf', 'robots','swerve.urdf.xacro')
-    robot_description_config = xacro.process_file(xacro_file)
+    swerve_description_config = xacro.process_file(xacro_file)
     
     # Save Built URDF file to Description Directory
-    robot_description_xml = robot_description_config.toxml()
+    swerve_description_xml = swerve_description_config.toxml()
     source_code_path = os.path.abspath(os.path.join(pkg_path, "../../../../src/swerve_description"))
     urdf_save_path = os.path.join(source_code_path, "swerve.urdf")
     with open(urdf_save_path, 'w') as f:
-        f.write(robot_description_xml)
+        f.write(swerve_description_xml)
 
     
     # Create a robot_state_publisher node
-    params = {'robot_description': robot_description_xml, 'use_sim_time': use_sim_time}
+    params = {'swerve_description': swerve_description_xml, 'use_sim_time': use_sim_time}
     node_robot_state_publisher = Node(
         package='robot_state_publisher',
         executable='robot_state_publisher',
