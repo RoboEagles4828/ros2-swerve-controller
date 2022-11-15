@@ -82,7 +82,7 @@ class ImportBot(BaseSample):
             for l_side in l_sides:
                 for i in range(9):
                     joint_name = "{}_{}_roller_{}_joint".format(l_side, w_side, i)
-                    joint_path = "{}/{}_{}_mecanum_link/{}".format(robot_prim_path, l_side, w_side, joint_name)
+                    joint_path = "{}/{}_{}_axle_link/{}".format(robot_prim_path, l_side, w_side, joint_name)
                     prim = stage.GetPrimAtPath(joint_path)
                     omni.kit.commands.execute(
                         "UnapplyAPISchemaCommand",
@@ -93,10 +93,10 @@ class ImportBot(BaseSample):
                     # drive = UsdPhysics.DriveAPI.Get(prim, "angular")
                     # set_drive_params(drive, 0.0, 2.0, 0.0)
 
-        front_left = UsdPhysics.DriveAPI.Get(stage.GetPrimAtPath(f"{robot_prim_path}/chassis_link/front_left_mecanum_joint"), "angular")
-        front_right = UsdPhysics.DriveAPI.Get(stage.GetPrimAtPath(f"{robot_prim_path}/chassis_link/front_right_mecanum_joint"), "angular")
-        rear_left = UsdPhysics.DriveAPI.Get(stage.GetPrimAtPath(f"{robot_prim_path}/chassis_link/rear_left_mecanum_joint"), "angular")
-        rear_right = UsdPhysics.DriveAPI.Get(stage.GetPrimAtPath(f"{robot_prim_path}/chassis_link/rear_right_mecanum_joint"), "angular")
+        front_left = UsdPhysics.DriveAPI.Get(stage.GetPrimAtPath(f"{robot_prim_path}/chassis_link/front_left_axle_joint"), "angular")
+        front_right = UsdPhysics.DriveAPI.Get(stage.GetPrimAtPath(f"{robot_prim_path}/chassis_link/front_right_axle_joint"), "angular")
+        rear_left = UsdPhysics.DriveAPI.Get(stage.GetPrimAtPath(f"{robot_prim_path}/chassis_link/rear_left_axle_joint"), "angular")
+        rear_right = UsdPhysics.DriveAPI.Get(stage.GetPrimAtPath(f"{robot_prim_path}/chassis_link/rear_right_axle_joint"), "angular")
 
         set_drive_params(front_left, 0, math.radians(1e5), 98.0)
         set_drive_params(front_right, 0, math.radians(1e5), 98.0)
