@@ -6,7 +6,7 @@
   <!-- Chassis Properties -->
   <xacro:property name="chassis_length" value=".7366" />
   <xacro:property name="chassis_width" value=".7366" />
-  <xacro:property name="chassis_height" value=".9" />
+  <xacro:property name="chassis_height" value="0.05588" />
   <xacro:property name="chassis_weight" value="19.0508795" />
 
   <xacro:macro name="square_chassis" params="prefix">
