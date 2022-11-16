@@ -27,7 +27,7 @@
 #include <vector>
 
 #include "controller_interface/controller_interface.hpp"
-#include "SWERVE_controller/visibility_control.h"
+#include "swerve_controller/visibility_control.h"
 #include "geometry_msgs/msg/twist.hpp"
 #include "geometry_msgs/msg/twist_stamped.hpp"
 #include "hardware_interface/handle.hpp"
@@ -38,7 +38,7 @@
 #include "realtime_tools/realtime_publisher.h"
 #include <hardware_interface/loaned_command_interface.hpp>
 
-namespace SWERVE_controller
+namespace swerve_controller
 {
 using CallbackReturn = rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn;
 
@@ -52,14 +52,25 @@ class Wheel {
     std::reference_wrapper<hardware_interface::LoanedCommandInterface> velocity_;
     std::string name;
 };
+class Axle {
+  public:
+    Axle(std::reference_wrapper<hardware_interface::LoanedCommandInterface> position, std::string name);
+    void set_position(double position);
 
-class SWERVEController : public controller_interface::ControllerInterface
+  private:
+    std::reference_wrapper<hardware_interface::LoanedCommandInterface> position_;
+    std::string name;
+
+
+};
+
+class SwerveController : public controller_interface::ControllerInterface
 {
   using Twist = geometry_msgs::msg::TwistStamped;
 
 public:
   SWERVE_CONTROLLER_PUBLIC
-  SWERVEController();
+  SwerveController();
 
   SWERVE_CONTROLLER_PUBLIC
   controller_interface::InterfaceConfiguration command_interface_configuration() const override;
@@ -87,19 +98,30 @@ public:
   CallbackReturn on_cleanup(const rclcpp_lifecycle::State & previous_state) override;
 
   SWERVE_CONTROLLER_PUBLIC
+  CallbackReturn on_error(const rclcpp_lifecycle::State & previous_state) override;
+
+  SWERVE_CONTROLLER_PUBLIC
   CallbackReturn on_shutdown(const rclcpp_lifecycle::State & previous_state) override;
 
 protected:
   std::shared_ptr<Wheel> get_wheel(const std::string & wheel_name);
+  std::shared_ptr<Axle> get_axle(const std::string & axle_name);
   std::shared_ptr<Wheel> front_left_handle_;
   std::shared_ptr<Wheel> front_right_handle_;
   std::shared_ptr<Wheel> rear_left_handle_;
   std::shared_ptr<Wheel> rear_right_handle_;
-  std::string front_left_joint_name_;
-  std::string front_right_joint_name_;
-  std::string rear_left_joint_name_;
-  std::string rear_right_joint_name_;
-
+  std::shared_ptr<Axle> front_left_handle_2_;
+  std::shared_ptr<Axle> front_right_handle_2_;
+  std::shared_ptr<Axle> rear_left_handle_2_;
+  std::shared_ptr<Axle> rear_right_handle_2_;
+  std::string front_left_wheel_joint_name_;
+  std::string front_right_wheel_joint_name_;
+  std::string rear_left_wheel_joint_name_;
+  std::string rear_right_wheel_joint_name_;
+  std::string front_left_axle_joint_name_;
+  std::string front_right_axle_joint_name_;
+  std::string rear_left_axle_joint_name_;
+  std::string rear_right_axle_joint_name_;
   struct WheelParams
   {
     double x_offset = 0.0; // Chassis Center to Axle Center
@@ -125,5 +147,5 @@ protected:
   bool reset();
   void halt();
 };
-}  // namespace SWERVE_controller
-#endif  // SWERVE_CONTROLLER__SWERVE_CONTROLLER_HPP_
+}  // namespace swerve_controllerS
+#endif  // Swerve_CONTROLLER__SWERVE_CONTROLLER_HPP_
