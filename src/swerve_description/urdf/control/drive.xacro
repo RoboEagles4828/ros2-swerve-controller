@@ -3,7 +3,7 @@
 
   <ros2_control name="swerve" type="system">
     <hardware>
-      <plugin>robot_hardware/IsaacDriveHardware</plugin>
+      <plugin>swerve_hardware/IsaacDriveHardware</plugin>
       <param name="example_param_hw_start_duration_sec">3.0</param>
       <param name="example_param_hw_stop_duration_sec">3.0</param>
     </hardware>

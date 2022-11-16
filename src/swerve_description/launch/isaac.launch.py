@@ -11,9 +11,7 @@ from launch_ros.actions import Node
 import xacro
 
 def generate_launch_description():
-
-    # Check if we're told to use sim time
-    use_sim_time = LaunchConfiguration('use_sim_time')
+    use_sim_time = True
 
     # Process the URDF file
     pkg_path = os.path.join(get_package_share_directory('swerve_description'))
@@ -34,7 +32,7 @@ def generate_launch_description():
 
     
      # Create a robot_state_publisher node
-    params = {'swerve_description': swerve_description_xml, 'use_sim_time': use_sim_time}
+    params = {'robot_description': swerve_description_xml, 'use_sim_time': use_sim_time}
     node_robot_state_publisher = Node(
         package='robot_state_publisher',
         executable='robot_state_publisher',
@@ -46,7 +44,7 @@ def generate_launch_description():
     control_node = Node(
         package="controller_manager",
         executable="ros2_control_node",
-        parameters=[{'swerve_description': swerve_description_xml, 'use_sim_time': True }, controllers_file],
+        parameters=[{'robot_description': swerve_description_xml, 'use_sim_time': True }, controllers_file],
         output="screen",
     )
 
