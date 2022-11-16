@@ -1,0 +1,45 @@
+[core]
+reloadable = true
+order = 0
+
+[package]
+version = "1.0.0"
+category = "Simulation"
+title = "Swerve Bot"
+description = "Extension for running swerve bot in Isaac Sim"
+authors = ["Gage Miller, Nitin C"]
+repository = ""
+keywords = ["isaac", "samples", "manipulation"]
+changelog = "docs/CHANGELOG.md"
+readme = "docs/README.md"
+preview_image = "data/preview.png"
+icon = "data/icon.png"
+writeTarget.kit = true
+
+[dependencies]
+"omni.kit.uiapp" = {}
+"omni.physx" = {}
+"omni.physx.vehicle" = {}
+"omni.isaac.dynamic_control" = {}
+"omni.isaac.motion_planning" = {}
+"omni.isaac.synthetic_utils" = {}
+"omni.isaac.ui" = {}
+"omni.isaac.core" = {}
+"omni.isaac.franka" = {}
+"omni.isaac.dofbot" = {}
+"omni.isaac.universal_robots" = {}
+"omni.isaac.motion_generation" = {}
+"omni.isaac.demos" = {}
+"omni.graph.action" = {} 
+"omni.graph.nodes" = {} 
+"omni.graph.core" = {}
+"omni.isaac.quadruped" = {}
+"omni.isaac.wheeled_robots" = {}
+"omni.isaac.examples" = {}
+
+
+[[python.module]]
+name = "omni.isaac.swerve_bot.import_bot"
+
+[[test]]
+timeout = 960
