@@ -2,19 +2,21 @@
 <robot xmlns:xacro="http://www.ros.org/wiki/xacro">
 
     <!-- Chassis Properties -->
-    <xacro:property name="axle_length" value="0.075" />
-    <xacro:property name="axle_height" value=".1" />
-    <xacro:property name="axle_width" value="0.075" />
-    <xacro:property name="axle_weight" value="2.45" />
+    <xacro:property name="axle_radius" value="0.075" />
+    <xacro:property name="axle_length" value=".1" />
+    <xacro:property name="axle_mass" value="0.23739" />
+    <xacro:property name="wheel_radius" value="0.0508" />
+    <xacro:property name="wheel_length" value="0.0381" />
+    <xacro:property name="wheel_mass" value="0.23133211" />
 
     <!-- Wheel Properties -->
     <!-- NOTE: The below values are **guesses**-->
+    <!-- NOTE: Pretty good **guesses**-->
     <xacro:property name="wheel_pos_x" value="-0.022"/>
     <xacro:property name="wheel_pos_y" value="0.065"/>
 
     <xacro:macro name="swerve_axle" params="prefix parent *origin">
         <link name="${prefix}_axle_link">
-            <!-- TODO: Add intertia -->
             <visual>
                 <origin xyz="0 0 0" rpy="0 0 0" />
                 <geometry>
@@ -22,13 +24,9 @@
                 </geometry>
                 <material name="blue" />
             </visual>
-            <collision>
+            <xacro:inertial_cylinder mass="${axle_mass}" radius="${axle_radius}" length="${wheel_length}" >
                 <origin xyz="0 0 0" rpy="0 0 0" />
-                <geometry>
-                    <!-- TODO: Change to a cylinder -->
-                    <box size="${axle_length} ${axle_width} ${axle_height}" />
-                </geometry>
-            </collision>
+            </xacro:inertial_cylinder>
         </link>
 
         <joint name="${prefix}_axle_joint" type="continuous">
@@ -40,21 +38,23 @@
         </joint>
         
         <link name="${prefix}_wheel_link">
-            <!-- TODO: Add inertia -->
             <visual>
                 <origin xyz="0 0 0" rpy="0 ${pi / 4} 0" />
+                
                 <geometry>
                     <mesh filename="package://swerve_description/meshes/SwerveWheel.stl" scale="0.001 0.001 0.001" />
                 </geometry>
                 <material name="yellow" />
             </visual>
             <collision>
-                <origin xyz="0 0 0" rpy="0 0 0" />
+                <origin xyz="0.021 0 0" rpy="0 ${pi / 2} 0"/>
                 <geometry>
-                    <!-- TODO: Change this to a cylinder -->
-                    <box size="1 1 1" />
+                    <cylinder  length="${wheel_length}" radius="${wheel_radius}"/>
                 </geometry>
             </collision>
+            <xacro:inertial_cylinder mass="${wheel_mass}" radius="${wheel_radius}" length="${wheel_length}" >
+                <origin xyz="0 0 0" rpy="0 ${pi / 2} 0" />
+            </xacro:inertial_cylinder>
         </link>
 
         
