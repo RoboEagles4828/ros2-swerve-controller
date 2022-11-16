@@ -12,8 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef ROBOT_HARDWARE__ISAAC_DRIVE_HPP_
-#define ROBOT_HARDWARE__ISAAC_DRIVE_HPP_
+#ifndef SWERVE_HARDWARE__ISAAC_DRIVE_HPP_
+#define SWERVE_HARDWARE__ISAAC_DRIVE_HPP_
 
 #include <memory>
 #include <string>
@@ -36,32 +36,32 @@
 
 using CallbackReturn = rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn;
 
-namespace robot_hardware
+namespace swerve_hardware
 {
 class IsaacDriveHardware : public hardware_interface::SystemInterface
 {
 public:
   RCLCPP_SHARED_PTR_DEFINITIONS(IsaacDriveHardware)
 
-  ROBOT_HARDWARE_PUBLIC
+  SWERVE_HARDWARE_PUBLIC
   CallbackReturn on_init(const hardware_interface::HardwareInfo & info) override;
 
-  ROBOT_HARDWARE_PUBLIC
+  SWERVE_HARDWARE_PUBLIC
   std::vector<hardware_interface::StateInterface> export_state_interfaces() override;
 
-  ROBOT_HARDWARE_PUBLIC
+  SWERVE_HARDWARE_PUBLIC
   std::vector<hardware_interface::CommandInterface> export_command_interfaces() override;
 
-  ROBOT_HARDWARE_PUBLIC
+  SWERVE_HARDWARE_PUBLIC
   CallbackReturn on_activate(const rclcpp_lifecycle::State & previous_state) override;
 
-  ROBOT_HARDWARE_PUBLIC
+  SWERVE_HARDWARE_PUBLIC
   CallbackReturn on_deactivate(const rclcpp_lifecycle::State & previous_state) override;
 
-  ROBOT_HARDWARE_PUBLIC
+  SWERVE_HARDWARE_PUBLIC
   hardware_interface::return_type read() override;
 
-  ROBOT_HARDWARE_PUBLIC
+  SWERVE_HARDWARE_PUBLIC
   hardware_interface::return_type write() override;
 
 private:
@@ -88,6 +88,6 @@ private:
   realtime_tools::RealtimeBox<std::shared_ptr<sensor_msgs::msg::JointState>> received_joint_msg_ptr_{nullptr};
 };
 
-}  // namespace robot_hardware
+}  // namespace swerve_hardware
 
-#endif  // ROBOT_HARDWARE__DIFFBOT_SYSTEM_HPP_
+#endif  // SWERVE_HARDWARE__DIFFBOT_SYSTEM_HPP_

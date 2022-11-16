@@ -25,7 +25,7 @@
 #include "sensor_msgs/msg/joint_state.hpp"
 using std::placeholders::_1;
 
-namespace robot_hardware
+namespace swerve_hardware
 {
 CallbackReturn IsaacDriveHardware::on_init(const hardware_interface::HardwareInfo & info)
 {
@@ -141,8 +141,15 @@ std::vector<hardware_interface::CommandInterface> IsaacDriveHardware::export_com
   std::vector<hardware_interface::CommandInterface> command_interfaces;
   for (auto i = 0u; i < info_.joints.size(); i++)
   {
-    command_interfaces.emplace_back(hardware_interface::CommandInterface(
-      info_.joints[i].name, hardware_interface::HW_IF_VELOCITY, &hw_commands_[i]));
+    RCLCPP_INFO(rclcpp::get_logger("IsaacDriveHardware"), "Joint Name %s", info_.joints[i].name.c_str());
+
+    if (info_.joints[i].command_interfaces[0].name == hardware_interface::HW_IF_VELOCITY) {
+      command_interfaces.emplace_back(hardware_interface::CommandInterface(
+        info_.joints[i].name, hardware_interface::HW_IF_VELOCITY, &hw_commands_[i]));
+    } else {
+      command_interfaces.emplace_back(hardware_interface::CommandInterface(
+        info_.joints[i].name, hardware_interface::HW_IF_POSITION, &hw_commands_[i]));
+    }
   }
 
   return command_interfaces;
@@ -219,7 +226,7 @@ hardware_interface::return_type IsaacDriveHardware::read()
 
 
 
-hardware_interface::return_type robot_hardware::IsaacDriveHardware::write()
+hardware_interface::return_type swerve_hardware::IsaacDriveHardware::write()
 {
   // RCLCPP_INFO(rclcpp::get_logger("IsaacDriveHardware"), "Velocity: %f", hw_commands_[0]);
 
@@ -236,10 +243,10 @@ hardware_interface::return_type robot_hardware::IsaacDriveHardware::write()
   return hardware_interface::return_type::OK;
 }
 
-}  // namespace robot_hardware
+}  // namespace swerve_hardware
 
 
 
 #include "pluginlib/class_list_macros.hpp"
 PLUGINLIB_EXPORT_CLASS(
-  robot_hardware::IsaacDriveHardware, hardware_interface::SystemInterface)
+  swerve_hardware::IsaacDriveHardware, hardware_interface::SystemInterface)
