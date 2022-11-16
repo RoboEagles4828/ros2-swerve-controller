@@ -98,16 +98,16 @@ InterfaceConfiguration SwerveController::command_interface_configuration() const
   conf_names.push_back(front_right_wheel_joint_name_ + "/" + HW_IF_VELOCITY);
   conf_names.push_back(rear_left_wheel_joint_name_ + "/" + HW_IF_VELOCITY);
   conf_names.push_back(rear_right_wheel_joint_name_ + "/" + HW_IF_VELOCITY);
+  conf_names.push_back(front_left_axle_joint_name_ + "/" + HW_IF_POSITION);
+  conf_names.push_back(front_right_axle_joint_name_ + "/" + HW_IF_POSITION);
+  conf_names.push_back(rear_left_axle_joint_name_ + "/" + HW_IF_POSITION);
+  conf_names.push_back(rear_right_axle_joint_name_ + "/" + HW_IF_POSITION);
   return {interface_configuration_type::INDIVIDUAL, conf_names};
 }
 
 InterfaceConfiguration SwerveController::state_interface_configuration() const
 { 
-  std::vector<std::string> conf_names;
-  conf_names.push_back(front_left_axle_joint_name_ + "/" + HW_IF_POSITION);
-  conf_names.push_back(front_right_axle_joint_name_ + "/" + HW_IF_POSITION);
-  conf_names.push_back(rear_left_axle_joint_name_ + "/" + HW_IF_POSITION);
-  conf_names.push_back(rear_right_axle_joint_name_ + "/" + HW_IF_POSITION);
+  
   return {interface_configuration_type::NONE};
 }
 
