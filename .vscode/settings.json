@@ -5,5 +5,10 @@
     "python.analysis.extraPaths": [
         "/opt/ros/galactic/lib/python3.8/site-packages"
     ],
-    "ros.distro": "galactic"
+    "ros.distro": "galactic",
+    "files.associations": {
+        "string": "cpp",
+        "typeindex": "cpp",
+        "typeinfo": "cpp"
+    }
 }
