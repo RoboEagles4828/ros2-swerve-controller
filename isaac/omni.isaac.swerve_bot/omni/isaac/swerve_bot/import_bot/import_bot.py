@@ -75,35 +75,29 @@ class ImportBot(BaseSample):
     
     def configure_robot(self, robot_prim_path):
         w_sides = ['left', 'right']
-        l_sides = ['front', 'rear']
+        l_sides = ['front', 'back']
         stage = self._world.stage
+        chassis_name = "swerve_chassis_link"
 
-        for w_side in w_sides:
-            for l_side in l_sides:
-                for i in range(9):
-                    joint_name = "{}_{}_roller_{}_joint".format(l_side, w_side, i)
-                    joint_path = "{}/{}_{}_axle_link/{}".format(robot_prim_path, l_side, w_side, joint_name)
-                    prim = stage.GetPrimAtPath(joint_path)
-                    omni.kit.commands.execute(
-                        "UnapplyAPISchemaCommand",
-                        api=UsdPhysics.DriveAPI,
-                        prim=prim,
-                        api_prefix="drive",
-                        multiple_api_token="angular")
-                    # drive = UsdPhysics.DriveAPI.Get(prim, "angular")
-                    # set_drive_params(drive, 0.0, 2.0, 0.0)
-
-        front_left = UsdPhysics.DriveAPI.Get(stage.GetPrimAtPath(f"{robot_prim_path}/chassis_link/front_left_axle_joint"), "angular")
-        front_right = UsdPhysics.DriveAPI.Get(stage.GetPrimAtPath(f"{robot_prim_path}/chassis_link/front_right_axle_joint"), "angular")
-        rear_left = UsdPhysics.DriveAPI.Get(stage.GetPrimAtPath(f"{robot_prim_path}/chassis_link/rear_left_axle_joint"), "angular")
-        rear_right = UsdPhysics.DriveAPI.Get(stage.GetPrimAtPath(f"{robot_prim_path}/chassis_link/rear_right_axle_joint"), "angular")
-
-        set_drive_params(front_left, 0, math.radians(1e5), 98.0)
-        set_drive_params(front_right, 0, math.radians(1e5), 98.0)
-        set_drive_params(rear_left, 0, math.radians(1e5), 98.0)
-        set_drive_params(rear_right, 0, math.radians(1e5), 98.0)
-        self.create_lidar(robot_prim_path)
-        self.create_depth_camera()
+       
+        front_left_axle = UsdPhysics.DriveAPI.Get(stage.GetPrimAtPath(f"{robot_prim_path}/{chassis_name}/front_left_axle_joint"), "angular")
+        front_right_axle = UsdPhysics.DriveAPI.Get(stage.GetPrimAtPath(f"{robot_prim_path}/{chassis_name}/front_right_axle_joint"), "angular")
+        back_left_axle = UsdPhysics.DriveAPI.Get(stage.GetPrimAtPath(f"{robot_prim_path}/{chassis_name}/back_left_axle_joint"), "angular")
+        back_right_axle = UsdPhysics.DriveAPI.Get(stage.GetPrimAtPath(f"{robot_prim_path}/{chassis_name}/back_right_axle_joint"), "angular")
+        front_left_wheel = UsdPhysics.DriveAPI.Get(stage.GetPrimAtPath(f"{robot_prim_path}/front_left_axle_link/front_left_wheel_joint"), "angular")
+        front_right_wheel = UsdPhysics.DriveAPI.Get(stage.GetPrimAtPath(f"{robot_prim_path}/front_right_axle_link/front_right_wheel_joint"), "angular")
+        back_left_wheel = UsdPhysics.DriveAPI.Get(stage.GetPrimAtPath(f"{robot_prim_path}/back_left_axle_link/back_left_wheel_joint"), "angular")
+        back_right_wheel = UsdPhysics.DriveAPI.Get(stage.GetPrimAtPath(f"{robot_prim_path}/back_right_axle_link/back_right_wheel_joint"), "angular")
+        set_drive_params(front_left_axle, 0, math.radians(1e5), 98.0)
+        set_drive_params(front_right_axle, 0, math.radians(1e5), 98.0)
+        set_drive_params(back_left_axle, 0, math.radians(1e5), 98.0)
+        set_drive_params(back_right_axle, 0, math.radians(1e5), 98.0)
+        set_drive_params(front_left_wheel, 0, math.radians(1e5), 98.0)
+        set_drive_params(front_right_wheel, 0, math.radians(1e5), 98.0)
+        set_drive_params(back_left_wheel, 0, math.radians(1e5), 98.0)
+        set_drive_params(back_right_wheel, 0, math.radians(1e5), 98.0)
+        #self.create_lidar(robot_prim_path)
+        #self.create_depth_camera()
         self.setup_robot_action_graph(robot_prim_path)
         return
 
@@ -228,73 +222,30 @@ class ImportBot(BaseSample):
                     ("PublishJointState", "omni.isaac.ros2_bridge.ROS2PublishJointState"),
                     ("SubscribeJointState", "omni.isaac.ros2_bridge.ROS2SubscribeJointState"),
                     ("articulation_controller", "omni.isaac.core_nodes.IsaacArticulationController"),
-                    ("isaac_read_lidar_beams_node", "omni.isaac.range_sensor.IsaacReadLidarBeams"),
-                    ("ros2_publish_laser_scan", "omni.isaac.ros2_bridge.ROS2PublishLaserScan"),
-                    ("ros2_camera_helper", "omni.isaac.ros2_bridge.ROS2CameraHelper"),
-                    ("ros2_camera_helper_02", "omni.isaac.ros2_bridge.ROS2CameraHelper"),
-                    ("ros2_camera_helper_03", "omni.isaac.ros2_bridge.ROS2CameraHelper"),
-                    ("isaac_create_viewport", "omni.isaac.core_nodes.IsaacCreateViewport"),
-                    ("set_active_camera", "omni.graph.ui.SetActiveViewportCamera"),
-                    ("get_prim_path", "omni.graph.nodes.GetPrimPath"),
-                    ("constant_token", "omni.graph.nodes.ConstantToken"),
-                    ("constant_token_02", "omni.graph.nodes.ConstantToken"),
+                    
                 ],
                 og.Controller.Keys.SET_VALUES: [
                     ("PublishJointState.inputs:topicName", "isaac_joint_states"),
                     ("SubscribeJointState.inputs:topicName", "isaac_joint_commands"),
                     ("articulation_controller.inputs:usePath", False),
-                    ("ros2_publish_laser_scan.inputs:topicName", "laser_scan"),
-                    ("ros2_publish_laser_scan.inputs:frameId", "base_link"),
-                    ("ros2_camera_helper.inputs:frameId", "base_link"),
-                    ("ros2_camera_helper_02.inputs:frameId", "base_link"),
-                    ("ros2_camera_helper_02.inputs:topicName", "camera_info"),
-                    ("ros2_camera_helper_03.inputs:frameId", "base_link"),
-                    ("ros2_camera_helper_03.inputs:topicName", "depth"),
-                    ("isaac_create_viewport.inputs:viewportId", 1),
-                    ("constant_token.inputs:value", "camera_info"),
-                    ("constant_token_02.inputs:value", "depth"),
+                   
                 ],
                 og.Controller.Keys.CONNECT: [
                     ("OnPlaybackTick.outputs:tick", "PublishJointState.inputs:execIn"),
                     ("OnPlaybackTick.outputs:tick", "SubscribeJointState.inputs:execIn"),
-                    ("OnPlaybackTick.outputs:tick", "isaac_read_lidar_beams_node.inputs:execIn"),
-                    ("OnPlaybackTick.outputs:tick", "isaac_create_viewport.inputs:execIn"),
+                   
                     ("OnPlaybackTick.outputs:tick", "articulation_controller.inputs:execIn"),
                     ("ReadSimTime.outputs:simulationTime", "PublishJointState.inputs:timeStamp"),
-                    ("ReadSimTime.outputs:simulationTime", "ros2_publish_laser_scan.inputs:timeStamp"),
                     ("Context.outputs:context", "PublishJointState.inputs:context"),
                     ("Context.outputs:context", "SubscribeJointState.inputs:context"),
-                    ("Context.outputs:context", "ros2_publish_laser_scan.inputs:context"),
-                    ("Context.outputs:context", "ros2_camera_helper.inputs:context"),
-                    ("Context.outputs:context", "ros2_camera_helper_02.inputs:context"),
                     ("SubscribeJointState.outputs:jointNames", "articulation_controller.inputs:jointNames"),
                     ("SubscribeJointState.outputs:velocityCommand", "articulation_controller.inputs:velocityCommand"),
-                    ("isaac_read_lidar_beams_node.outputs:execOut", "ros2_publish_laser_scan.inputs:execIn"),
-                    ("isaac_read_lidar_beams_node.outputs:azimuthRange", "ros2_publish_laser_scan.inputs:azimuthRange"),
-                    ("isaac_read_lidar_beams_node.outputs:depthRange", "ros2_publish_laser_scan.inputs:depthRange"),
-                    ("isaac_read_lidar_beams_node.outputs:horizontalFov", "ros2_publish_laser_scan.inputs:horizontalFov"),
-                    ("isaac_read_lidar_beams_node.outputs:horizontalResolution", "ros2_publish_laser_scan.inputs:horizontalResolution"),
-                    ("isaac_read_lidar_beams_node.outputs:intensitiesData", "ros2_publish_laser_scan.inputs:intensitiesData"),
-                    ("isaac_read_lidar_beams_node.outputs:linearDepthData", "ros2_publish_laser_scan.inputs:linearDepthData"),
-                    ("isaac_read_lidar_beams_node.outputs:numCols", "ros2_publish_laser_scan.inputs:numCols"),
-                    ("isaac_read_lidar_beams_node.outputs:numRows", "ros2_publish_laser_scan.inputs:numRows"),
-                    ("isaac_read_lidar_beams_node.outputs:rotationRate", "ros2_publish_laser_scan.inputs:rotationRate"),
-                    ("isaac_create_viewport.outputs:viewport", "ros2_camera_helper.inputs:viewport"),
-                    ("isaac_create_viewport.outputs:viewport", "ros2_camera_helper_02.inputs:viewport"),
-                    ("isaac_create_viewport.outputs:viewport", "set_active_camera.inputs:viewport"),
-                    ("isaac_create_viewport.outputs:execOut", "set_active_camera.inputs:execIn"),
-                    ("set_active_camera.outputs:execOut", "ros2_camera_helper.inputs:execIn"),
-                    ("set_active_camera.outputs:execOut", "ros2_camera_helper_02.inputs:execIn"),
-                    ("get_prim_path.outputs:primPath", "set_active_camera.inputs:primPath"),
-                    ("constant_token.inputs:value", "ros2_camera_helper_02.inputs:type"),
                 ],
             }
         )
 
         set_target_prims(primPath=f"{robot_controller_path}/articulation_controller", targetPrimPaths=[robot_prim_path])
         set_target_prims(primPath=f"{robot_controller_path}/PublishJointState", targetPrimPaths=[robot_prim_path])
-        set_target_prims(primPath=f"{robot_controller_path}/isaac_read_lidar_beams_node", targetPrimPaths=[self.lidar_prim_path], inputName="inputs:lidarPrim")
-        set_target_prims(primPath=f"{robot_controller_path}/get_prim_path", targetPrimPaths=[self.depth_left_camera_path], inputName="inputs:prim")
         return
 
     async def setup_pre_reset(self):
