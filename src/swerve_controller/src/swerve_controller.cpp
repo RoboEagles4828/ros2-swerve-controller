@@ -163,10 +163,10 @@ controller_interface::return_type SwerveController::update(
   const double rear_left_velocity = (sqrt( pow( a , 2 ) + pow( d , 2) ) );
   const double rear_right_velocity = (sqrt( pow( a, 2 ) + pow( c , 2) ) );
 
-  const double front_left_position = atan2(b,d);
-  const double front_right_position = atan2(b,c);
-  const double rear_left_position = atan2(a,d);
-  const double rear_right_postition = atan2(a,c);
+  const double front_left_position = atan2(b,d)/M_PI;
+  const double front_right_position = atan2(b,c)/M_PI;
+  const double rear_left_position = atan2(a,d)/M_PI;
+  const double rear_right_postition = atan2(a,c)/M_PI;
 
   // Set Wheel Velocities
   front_left_handle_->set_velocity(front_left_velocity);

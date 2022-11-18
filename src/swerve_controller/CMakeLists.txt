@@ -38,8 +38,8 @@ ament_target_dependencies(swerve_controller
 )
 # Causes the visibility macros to use dllexport rather than dllimport,
 # which is appropriate when building the dll but not consuming it.
-target_compile_definitions(mecanum_controller PRIVATE "MECANUM_CONTROLLER_BUILDING_DLL")
-pluginlib_export_plugin_description_file(controller_interface mecanum_plugin.xml)
+target_compile_definitions(swerve_controller PRIVATE "SWERVE_CONTROLLER_BUILDING_DLL")
+pluginlib_export_plugin_description_file(controller_interface swerve_plugin.xml)
 
 install(DIRECTORY include/
   DESTINATION include

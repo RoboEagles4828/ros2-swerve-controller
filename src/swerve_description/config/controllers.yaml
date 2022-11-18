@@ -22,5 +22,5 @@ swerve_controller:
     chassis_length: 0.7366
     chassis_width: 0.7366
 
-    cmd_vel_timeout: 0.5
+    cmd_vel_timeout: 10.0
     use_stamped_vel: false

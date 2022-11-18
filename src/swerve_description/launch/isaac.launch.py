@@ -58,18 +58,18 @@ def generate_launch_description():
     
 
 
-    # Starts ROS2 Control Swerve Drive Controller
-    # swerve_drive_controller_spawner = Node(
-    #     package="controller_manager",
-    #     executable="spawner",
-    #     arguments=["swerve_controller", "-c", "/controller_manager"],
-    # )
-    # swerve_drive_controller_delay = RegisterEventHandler(
-    #     event_handler=OnProcessExit(
-    #         target_action=joint_state_broadcaster_spawner,
-    #         on_exit=[swerve_drive_controller_spawner],
-    #     )
-    # )
+    #Starts ROS2 Control Swerve Drive Controller
+    swerve_drive_controller_spawner = Node(
+        package="controller_manager",
+        executable="spawner",
+        arguments=["swerve_controller", "-c", "/controller_manager"],
+    )
+    swerve_drive_controller_delay = RegisterEventHandler(
+        event_handler=OnProcessExit(
+            target_action=joint_state_broadcaster_spawner,
+            on_exit=[swerve_drive_controller_spawner],
+        )
+    )
 
 
     # Start Rviz2 with basic view
@@ -122,7 +122,7 @@ def generate_launch_description():
         control_node,
         node_robot_state_publisher,
         joint_state_broadcaster_spawner,
-        # swerve_drive_controller_delay,
+        swerve_drive_controller_delay,
         rviz2_delay,
         joy,
         joy_teleop
