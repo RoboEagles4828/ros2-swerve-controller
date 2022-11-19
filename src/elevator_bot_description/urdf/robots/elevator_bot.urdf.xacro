@@ -1,0 +1,7 @@
+<?xml version="1.0"?>
+<robot name="swerve" xmlns:xacro="http://www.ros.org/wiki/xacro">
+
+    <!-- Include Files -->
+
+    <!-- Axle Position Variables -->
+</robot>
