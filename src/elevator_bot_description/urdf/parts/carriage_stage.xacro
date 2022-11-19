@@ -4,8 +4,35 @@
     <xacro:property name="example_property" value="-1" />
 
 
-    <xacro:macro name="carriage_stage" params="prefix">
-        <link name="carriage_stage"></link>
+    <xacro:macro name="carriage_stage" params="prefix parent origin"/>
+        <xacro:property name="length" value="0.3548888"/>
+        <xacro:property name="width" value="0.2159"/>
+        <xacro:property name="height" value="0.06985"/>
+        <xacro:property name="weight" value="0.91740145454"/>
+        
+        <link name="${prefix}_stage_link">
+            <xacro:inertial_box mass="${weight}" x="${length}" y="${width}" z="${height}">
+                <origin xyz="0 0 0" rpy="0 0 0"/>
+            <xacro:inertial_box/>
+            <visual>
+                <origin xyz="${origin}" rpy="0 0 0"/>
+                <geometry>
+                    <mesh filename="package://elevator_bot_description/meshes/CarriageStage.stl" scale="0.001 0.001 0.001"/>
+                </geometry>
+                <material name="blue"/>
+            </visual>
+            <collision>
+                <origin xyz="0 ${height/2} 0" rpy="0 0 0"/>
+                <geometry>
+                    <box size="${length} ${width} ${height}"/>
+                </geometry>
+            </collision>
+        </link>
+
+        <joint name="${prefix}_stage_joint" type="fixed">
+            <parent link="${parent}"/>
+            <origin xyz="0 0 0" rpy="0 0 0"/>
+        </joint>
     </xacro:macro>
 
 </robot>
