@@ -1,0 +1,29 @@
+<?xml version="1.0"?>
+<robot name="swerve" xmlns:xacro="http://www.ros.org/wiki/xacro">
+
+    <!-- Include Files -->
+    <xacro:include filename="$(find swerve_description)/urdf/control/drive.xacro" />
+    <xacro:include filename="$(find swerve_description)/urdf/util/macros.xacro" />
+    <xacro:include filename="$(find swerve_description)/urdf/util/materials.xacro" />
+    <xacro:include filename="$(find swerve_description)/urdf/parts/square_chassis.xacro" />
+    <xacro:include filename="$(find swerve_description)/urdf/parts/swerve_axle.xacro" />
+
+    <!-- Axle Position Variables -->
+    <xacro:property name="axle_pos" value="${301.625 / 1000}" />
+    <xacro:property name="axle_pos_y" value="${69.056 / 1000}" />
+
+
+    <xacro:square_chassis prefix="swerve" />
+    <xacro:swerve_axle prefix="front_left" parent="swerve_chassis_link">
+        <origin xyz="${axle_pos} ${axle_pos_y} ${axle_pos}" rpy="${pi / 2} 0 0" />
+    </xacro:swerve_axle>
+    <xacro:swerve_axle prefix="front_right" parent="swerve_chassis_link">
+        <origin xyz="-${axle_pos} ${axle_pos_y} ${axle_pos}" rpy="${pi / 2} 0 0" />
+    </xacro:swerve_axle>
+    <xacro:swerve_axle prefix="back_left" parent="swerve_chassis_link">
+        <origin xyz="${axle_pos} ${axle_pos_y} -${axle_pos}" rpy="${pi / 2} 0 0" />
+    </xacro:swerve_axle>
+    <xacro:swerve_axle prefix="back_right" parent="swerve_chassis_link">
+        <origin xyz="-${axle_pos} ${axle_pos_y} -${axle_pos}" rpy="${pi / 2} 0 0" />
+    </xacro:swerve_axle>
+</robot>
