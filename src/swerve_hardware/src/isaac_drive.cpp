@@ -39,8 +39,6 @@ CallbackReturn IsaacDriveHardware::on_init(const hardware_interface::HardwareInf
   isaac_publisher_ = node_->create_publisher<sensor_msgs::msg::JointState>("isaac_joint_commands", rclcpp::SystemDefaultsQoS());
   realtime_isaac_publisher_ = std::make_shared<realtime_tools::RealtimePublisher<sensor_msgs::msg::JointState>>(
       isaac_publisher_);
-  realtime_isaac_publisher_ = std::make_shared<realtime_tools::RealtimePublisher<sensor_msgs::msg::JointState>>(
-      isaac_publisher_);
 
 
   // SUBSCRIBER SETUP
@@ -63,14 +61,10 @@ CallbackReturn IsaacDriveHardware::on_init(const hardware_interface::HardwareInf
     return CallbackReturn::ERROR;
   }
 
-  // hw_start_sec_ = stod(info_.hardware_parameters["example_param_hw_start_duration_sec"]);
-  // hw_stop_sec_ = stod(info_.hardware_parameters["example_param_hw_stop_duration_sec"]);
   hw_positions_.resize(info_.joints.size(), std::numeric_limits<double>::quiet_NaN());
   hw_velocities_.resize(info_.joints.size(), std::numeric_limits<double>::quiet_NaN());
   hw_command_velocity_.resize(info_.joints.size()/2, std::numeric_limits<double>::quiet_NaN());
   hw_command_position_.resize(info_.joints.size()/2, std::numeric_limits<double>::quiet_NaN());
-  // joint_names_velocity_.resize(info_.joints.size()/2, "");
-  // joint_names_position_.resize(info_.joints.size()/2, "");
 
 
   for (const hardware_interface::ComponentInfo & joint : info_.joints)
@@ -178,17 +172,19 @@ CallbackReturn IsaacDriveHardware::on_activate(
 {
   RCLCPP_INFO(rclcpp::get_logger("IsaacDriveHardware"), "Activating ...please wait...");
 
-  // set some default values
+  // Set Default Values for State Interface Arrays
   for (auto i = 0u; i < hw_positions_.size(); i++)
   {
-    if (std::isnan(hw_positions_[i]))
-    {
-      hw_positions_[i] = NULL;
-      hw_velocities_[i] = NULL;
-      hw_command_velocity_[i] = NULL;
-      hw_command_position_[i] = NULL;
-    }
+    hw_positions_[i] = NULL;
+    hw_velocities_[i] = NULL;
     joint_names_map_[joint_names_[i]] = i + 1; // ADD 1 to differentiate null key
+  }
+
+  // Set Default Values for Command Interface Arrays
+  for (auto i = 0u; i < hw_command_velocity_.size(); i++)
+  {
+    hw_command_velocity_[i] = NULL;
+    hw_command_position_[i] = NULL;
   }
 
   subscriber_is_active_ = true;
@@ -247,30 +243,24 @@ hardware_interface::return_type swerve_hardware::IsaacDriveHardware::write()
 {
   //RCLCPP_INFO(rclcpp::get_logger("IsaacDriveHardware"), "Velocity: %f", hw_command_velocity_[0]);
 
-  if (realtime_isaac_publisher_->trylock()) {
-    auto & realtime_isaac_command_ = realtime_isaac_publisher_->msg_;
-    realtime_isaac_command_.header.stamp = node_->get_clock()->now();
-    realtime_isaac_command_.name = joint_names_position_;
-    // for(int i=0; i<joint_names_.size();i++){
-    //   joint_names_
-    // }
-    realtime_isaac_command_.position = hw_command_position_;
-    realtime_isaac_publisher_->unlockAndPublish();
-    
-  }
+  // Publish Velocity
   if (realtime_isaac_publisher_->trylock()) {
     auto & realtime_isaac_command_ = realtime_isaac_publisher_->msg_;
     realtime_isaac_command_.header.stamp = node_->get_clock()->now();
     realtime_isaac_command_.name = joint_names_velocity_;
-    // for(int i=0; i<joint_names_.size();i++){
-    //   joint_names_
-    // }
-    realtime_isaac_command_.velocity = hw_command_velocity_;
+    realtime_isaac_command_.position = hw_command_velocity_;
     realtime_isaac_publisher_->unlockAndPublish();
-    
   }
+  rclcpp::spin_some(node_);
 
-  
+  // Publish Position
+  if (realtime_isaac_publisher_->trylock()) {
+    auto & realtime_isaac_command_ = realtime_isaac_publisher_->msg_;
+    realtime_isaac_command_.header.stamp = node_->get_clock()->now();
+    realtime_isaac_command_.name = joint_names_position_;
+    realtime_isaac_command_.position = hw_command_position_;
+    realtime_isaac_publisher_->unlockAndPublish();
+  }
   rclcpp::spin_some(node_);
 
   return hardware_interface::return_type::OK;
