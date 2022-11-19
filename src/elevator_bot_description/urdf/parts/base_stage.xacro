@@ -1,0 +1,12 @@
+<?xml version="1.0"?>
+<robot xmlns:xacro="http://www.ros.org/wiki/xacro">
+
+
+    <!-- Base Stage Properties -->
+    <xacro:property name="example_property" value="-1" />
+
+
+    <xacro:macro name="base_stage" params="prefix">
+        <link name="base_stage"></link>
+    </xacro:macro>
+</robot>
