@@ -248,7 +248,8 @@ hardware_interface::return_type swerve_hardware::IsaacDriveHardware::write()
     auto & realtime_isaac_command_ = realtime_isaac_publisher_->msg_;
     realtime_isaac_command_.header.stamp = node_->get_clock()->now();
     realtime_isaac_command_.name = joint_names_velocity_;
-    realtime_isaac_command_.position = hw_command_velocity_;
+    realtime_isaac_command_.velocity = hw_command_velocity_;
+    realtime_isaac_command_.position = empty_;
     realtime_isaac_publisher_->unlockAndPublish();
   }
   rclcpp::spin_some(node_);
@@ -258,6 +259,7 @@ hardware_interface::return_type swerve_hardware::IsaacDriveHardware::write()
     auto & realtime_isaac_command_ = realtime_isaac_publisher_->msg_;
     realtime_isaac_command_.header.stamp = node_->get_clock()->now();
     realtime_isaac_command_.name = joint_names_position_;
+    realtime_isaac_command_.velocity = empty_;
     realtime_isaac_command_.position = hw_command_position_;
     realtime_isaac_publisher_->unlockAndPublish();
   }

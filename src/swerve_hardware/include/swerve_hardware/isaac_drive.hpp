@@ -74,6 +74,7 @@ private:
   std::vector<double> hw_command_position_;
   std::vector<double> hw_positions_;
   std::vector<double> hw_velocities_;
+  std::vector<double> empty_;
   std::vector<std::string> joint_names_;
   std::vector<std::string> joint_names_velocity_;
   std::vector<std::string> joint_names_position_;

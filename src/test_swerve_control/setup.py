@@ -20,7 +20,8 @@ setup(
     tests_require=['pytest'],
     entry_points={
         'console_scripts': [
-            'publish = robot_control.publish_joint_command:main',
+            'publish-joints = test_swerve_control.publish_joint_command:main',
+            'publish-twist = test_swerve_control.publish_twist_command:main',
         ],
     },
 )
