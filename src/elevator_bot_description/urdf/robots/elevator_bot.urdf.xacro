@@ -2,12 +2,16 @@
 <robot name="elevator_bot" xmlns:xacro="http://www.ros.org/wiki/xacro">
 
     <!-- Include Files -->
-    <xacro:include filename="$(find elevator_bot_description)/urdf/parts/base_stage.xacro" />
-    <xacro:include filename="$(find elevator_bot_description)/urdf/parts/carriage_stage.xacro" />
+    <!-- <xacro:include filename="$(find elevator_bot_description)/urdf/parts/base_stage.xacro" /> -->
+    <!-- <xacro:include filename="$(find elevator_bot_description)/urdf/parts/carriage_stage.xacro" /> -->
     <xacro:include filename="$(find elevator_bot_description)/urdf/parts/second_stage.xacro" />
+    <xacro:include filename="$(find elevator_bot_description)/urdf/util/macros.xacro" />
+    <xacro:include filename="$(find elevator_bot_description)/urdf/util/materials.xacro" />
 
     <!-- Position Variables -->
-    <xacro:base_stage prefix="elevator_bot" />
-    <xacro:second_stage parent="elevator_bot_base_stage" />
-    <xacro:carriage_stage parent="elevator_bot_second_stage" />
+    <!-- <xacro:base_stage prefix="elevator_bot" /> -->
+    <xacro:second_stage prefix="elevator_bot"/>
+    <!-- <xacro:carriage_stage parent="elevator_bot_second_stage">
+        <origin xyz="0 0 0"></origin>
+    </xacro:carriage_stage> -->
 </robot>

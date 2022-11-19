@@ -1,10 +1,10 @@
 <?xml version="1.0"?>
 <robot xmlns:xacro="http://www.ros.org/wiki/xacro">
     <!-- Carriage Properties -->
-    <xacro:property name="example_property" value="-1" />
+    <!-- <xacro:property name="example_property" value="-1" /> -->
 
 
-    <xacro:macro name="carriage_stage" params="prefix parent origin"/>
+    <xacro:macro name="carriage_stage" params="prefix parent origin">
         <xacro:property name="length" value="0.3548888"/>
         <xacro:property name="width" value="0.2159"/>
         <xacro:property name="height" value="0.06985"/>
@@ -13,7 +13,7 @@
         <link name="${prefix}_stage_link">
             <xacro:inertial_box mass="${weight}" x="${length}" y="${width}" z="${height}">
                 <origin xyz="0 0 0" rpy="0 0 0"/>
-            <xacro:inertial_box/>
+            </xacro:inertial_box>
             <visual>
                 <origin xyz="${origin}" rpy="0 0 0"/>
                 <geometry>
