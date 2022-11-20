@@ -5,13 +5,13 @@ teleop_twist_joy_node:
       x: 1
       y: 0
     scale_linear:
-      x: 40.0
-      y: 40.0
+      x: 5.0
+      y: 5.0
 
     axis_angular:  # Right thumb stick horizontal
       yaw: 2
     scale_angular:
-      yaw: 12.56637
+      yaw: 3.14159
       
     enable_button: 2  # Left trigger button
     enable_turbo_button: 5  # Right trigger button

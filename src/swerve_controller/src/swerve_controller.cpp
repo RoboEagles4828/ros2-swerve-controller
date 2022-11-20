@@ -162,10 +162,10 @@ controller_interface::return_type SwerveController::update(
   const double d =  linear_y_cmd + angular_cmd * x_offset / 2;
 
 
-  const double front_left_velocity = (sqrt( pow( b , 2) + pow ( d , 2) ) )/(1/(radius*M_PI));
-  const double front_right_velocity = (sqrt( pow( b , 2) + pow( c , 2 ) ) )/(1/(radius*M_PI));
-  const double rear_left_velocity = (sqrt( pow( a , 2 ) + pow( d , 2) ) )/(1/(radius*M_PI));
-  const double rear_right_velocity = (sqrt( pow( a, 2 ) + pow( c , 2) ) )/(1/(radius*M_PI));
+  const double front_left_velocity = (sqrt( pow( b , 2) + pow ( d , 2) ) )*(1/(radius*M_PI));
+  const double front_right_velocity = (sqrt( pow( b , 2) + pow( c , 2 ) ) )*(1/(radius*M_PI));
+  const double rear_left_velocity = (sqrt( pow( a , 2 ) + pow( d , 2) ) )*(1/(radius*M_PI));
+  const double rear_right_velocity = (sqrt( pow( a, 2 ) + pow( c , 2) ) )*(1/(radius*M_PI));
 
   const double front_left_position = atan2(b,d);
   const double front_right_position = atan2(b,c);
