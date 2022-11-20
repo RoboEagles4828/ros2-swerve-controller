@@ -3,7 +3,7 @@
 <package format="3">
   <name>test_swerve_control</name>
   <version>0.0.0</version>
-  <description>Control the robot</description>
+  <description>Test package for publishing topic messages to test swerve control</description>
   <maintainer email="gagemiller155@gmail.com">helios</maintainer>
   <license>MIT</license>
 
