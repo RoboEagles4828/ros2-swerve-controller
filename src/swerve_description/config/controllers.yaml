@@ -21,6 +21,6 @@ swerve_controller:
     rear_right_axle_joint: "back_right_axle_joint"
     chassis_length: 0.7366
     chassis_width: 0.7366
-
+    wheel_radius: 0.1016
     cmd_vel_timeout: 10.0
     use_stamped_vel: false
