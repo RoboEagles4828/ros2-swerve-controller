@@ -150,23 +150,27 @@ controller_interface::return_type SwerveController::update(
   double & angular_cmd = command.twist.angular.z;
 
   double x_offset = wheel_params_.x_offset;
-  //double radius = wheel_params_.radius;
+  double radius = wheel_params_.radius;
 
   // Compute Wheel Velocities and Positions
   const double a =  linear_x_cmd - angular_cmd * x_offset / 2;
+
   const double b =  linear_x_cmd + angular_cmd * x_offset / 2;
+
   const double c =  linear_y_cmd - angular_cmd * x_offset / 2;
+
   const double d =  linear_y_cmd + angular_cmd * x_offset / 2;
 
-  const double front_left_velocity = (sqrt( pow( b , 2) + pow ( d , 2) ) );
-  const double front_right_velocity = (sqrt( pow( b , 2) + pow( c , 2 ) ) );
-  const double rear_left_velocity = (sqrt( pow( a , 2 ) + pow( d , 2) ) );
-  const double rear_right_velocity = (sqrt( pow( a, 2 ) + pow( c , 2) ) );
 
-  const double front_left_position = atan2(b,d)/M_PI;
-  const double front_right_position = atan2(b,c)/M_PI;
-  const double rear_left_position = atan2(a,d)/M_PI;
-  const double rear_right_postition = atan2(a,c)/M_PI;
+  const double front_left_velocity = (sqrt( pow( b , 2) + pow ( d , 2) ) )/(1/(radius*M_PI));
+  const double front_right_velocity = (sqrt( pow( b , 2) + pow( c , 2 ) ) )/(1/(radius*M_PI));
+  const double rear_left_velocity = (sqrt( pow( a , 2 ) + pow( d , 2) ) )/(1/(radius*M_PI));
+  const double rear_right_velocity = (sqrt( pow( a, 2 ) + pow( c , 2) ) )/(1/(radius*M_PI));
+
+  const double front_left_position = atan2(b,d);
+  const double front_right_position = atan2(b,c);
+  const double rear_left_position = atan2(a,d);
+  const double rear_right_postition = atan2(a,c);
 
   // Set Wheel Velocities
   front_left_handle_->set_velocity(front_left_velocity);
