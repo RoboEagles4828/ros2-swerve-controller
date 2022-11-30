@@ -6,6 +6,11 @@
     <!-- 47in (1.1938m) length total -->
     <!-- 4.9748lbs (2.2565kgs) weight total -->
 
+    <!-- DEBUG: Define a material that's transparent to help line up the collision box -->
+    <material name="grey_overlay">
+        <color rgba="0.2 0.2 0.2 0.5" />
+      </material>
+
     <xacro:property name="total_length" value="1.1938" />
     <xacro:property name="total_width" value="0.3937" />
     <xacro:property name="total_height" value="0.0508" /> <!-- Not completely accurate!-->
@@ -16,25 +21,33 @@
     <xacro:macro name="second_stage" params="prefix">
         <!-- Second Stage Properties -->
         <link name="second_stage">
-
-
-
             <xacro:inertial_box mass="${total_weight}" x="${total_length}" y="${total_width}" z="${total_height}">
                 <origin xyz="0 0 0" rpy="0 0 0" />
             </xacro:inertial_box>
+            <collision> <!-- Does not work! -->
+                <origin xyz="0 0 ${2*total_height}" rpy="0 0 0" />
+                <geometry>
+                    <box size="${total_length} ${total_width} ${total_height}" />
+                </geometry>
+                <material name="blue" />
+            </collision>
             <visual>
-                <origin xyz="0.061605 -0.75 -0.53866" rpy="0 0 0" />
+                <origin xyz=".5 ${-4/3} ${-2/3}" rpy="0 0 0" /> <!-- Origin is offset to center the model, if there are problems, reset this to 0 0 0 -->
                 <geometry>
                     <mesh filename="package://elevator_bot_description/meshes/2ndStageStructure.stl" scale="0.001 0.001 0.001" />
                 </geometry>
                 <material name="blue" />
             </visual>
-            <collision>
-                <origin xyz="0 ${total_height/2} 0" rpy="0 0 0" />
+        </link>
+        <!-- DEBUG: A separate part to help line up the collision with the model -->
+        <link name="temporary_box">
+            <visual>
+                <origin xyz="0 0 ${11*total_height}" rpy="0 0 0" />
                 <geometry>
-                    <box size="${total_length} ${total_height} ${total_width}" />
+                    <box size="${total_width} ${total_height} ${total_length}" />
                 </geometry>
-            </collision>
+                <material name="grey_overlay" />
+            </visual>
         </link>
     </xacro:macro>
 

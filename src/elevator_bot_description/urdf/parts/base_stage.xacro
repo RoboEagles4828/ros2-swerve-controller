@@ -1,12 +1,35 @@
 <?xml version="1.0"?>
 <robot xmlns:xacro="http://www.ros.org/wiki/xacro">
 
+    <!-- PLACEHOLDER VALUES! CHANGE THESE -->
+    <xacro:property name="total_length" value="1" />
+    <xacro:property name="total_width" value="1" />
+    <xacro:property name="total_height" value="1" />
+    <xacro:property name="total_weight" value="1" />
 
-    <!-- Base Stage Properties -->
-    <xacro:property name="example_property" value="-1" />
+    <xacro:property name="bar_height" value="1" />
+    <xacro:property name="bar_width" value="1" />
 
-
+    <!-- This entire file is pretty much a placeholder -->
+    <!-- Feel free to delete everything and start over -->
     <xacro:macro name="base_stage" params="prefix">
-        <link name="base_stage"></link>
+        <link name="base_stage">
+            <xacro:inertial_box mass="${total_weight}" x="${total_length}" y="${total_width}" z="${total_height}">
+                <origin xyz="0 0 0" rpy="0 0 0" />
+            </xacro:inertial_box>
+            <visual>
+                <origin xyz="-1 -.5 0" rpy="0 0 0" />
+                <geometry>
+                    <mesh filename="package://elevator_bot_description/meshes/BaseStageStructure.stl" scale="0.001 0.001 0.001" />
+                </geometry>
+                <material name="blue" />
+            </visual>
+            <collision>
+                <origin xyz="0 ${total_height/2} 0" rpy="0 0 0" />
+                <geometry>
+                    <box size="${total_length} ${total_height} ${total_width}" />
+                </geometry>
+            </collision>
+        </link>
     </xacro:macro>
 </robot>
