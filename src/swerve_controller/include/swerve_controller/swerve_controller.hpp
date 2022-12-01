@@ -54,11 +54,13 @@ class Wheel {
 };
 class Axle {
   public:
-    Axle(std::reference_wrapper<hardware_interface::LoanedCommandInterface> position, std::string name);
+    Axle(std::reference_wrapper<hardware_interface::LoanedCommandInterface> cmd_position_, std::reference_wrapper<const hardware_interface::LoanedStateInterface> state_position_, std::string name);
     void set_position(double position);
+    double get_Position (void);
 
   private:
-    std::reference_wrapper<hardware_interface::LoanedCommandInterface> position_;
+    std::reference_wrapper<hardware_interface::LoanedCommandInterface> cmd_position_;
+    std::reference_wrapper<const hardware_interface::LoanedStateInterface> state_position_;
     std::string name;
 
 

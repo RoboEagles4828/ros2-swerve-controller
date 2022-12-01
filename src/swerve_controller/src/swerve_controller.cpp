@@ -58,6 +58,9 @@ void Axle::set_position(double position)
 {
   position_.get().set_value(position);
 }
+void Axle::get_position(void) 
+{
+}
 SwerveController::SwerveController() : controller_interface::ControllerInterface() {}
 
 CallbackReturn SwerveController::on_init()
@@ -107,8 +110,12 @@ InterfaceConfiguration SwerveController::command_interface_configuration() const
 
 InterfaceConfiguration SwerveController::state_interface_configuration() const
 { 
-  
-  return {interface_configuration_type::NONE};
+  std::vector<std::string> conf_names;
+  conf_names.push_back(front_left_axle_joint_name_ + "/" + HW_IF_POSITION);
+  conf_names.push_back(front_right_axle_joint_name_ + "/" + HW_IF_POSITION);
+  conf_names.push_back(rear_left_axle_joint_name_ + "/" + HW_IF_POSITION);
+  conf_names.push_back(rear_right_axle_joint_name_ + "/" + HW_IF_POSITION);
+  return {interface_configuration_type::INDIVIDUAL, conf_names};
 }
 
 controller_interface::return_type SwerveController::update(
