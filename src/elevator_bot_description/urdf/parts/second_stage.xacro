@@ -6,49 +6,52 @@
     <!-- 47in (1.1938m) length total -->
     <!-- 4.9748lbs (2.2565kgs) weight total -->
 
-    <!-- DEBUG: Define a material that's transparent to help line up the collision box -->
-    <material name="grey_overlay">
-        <color rgba="0.2 0.2 0.2 0.5" />
-      </material>
-
-    <xacro:property name="total_length" value="1.1938" />
-    <xacro:property name="total_width" value="0.3937" />
-    <xacro:property name="total_height" value="0.0508" /> <!-- Not completely accurate!-->
+    <!-- These are more measurement guesses because the measured size is being weird -->
+    <xacro:property name="total_height" value="1.525" />
+    <xacro:property name="total_width" value="0.485" /> <!-- 0.53333 -->
+    <xacro:property name="total_length" value="0.0508" />
     <xacro:property name="total_weight" value="2.2565" />
 
-    <xacro:property name="bar_height" value="0.0508" />
+    <xacro:property name="bar_height" value="0.0265" />
     <xacro:property name="bar_width" value="0.0254" />
+
     <xacro:macro name="second_stage" params="prefix">
-        <!-- Second Stage Properties -->
         <link name="second_stage">
-            <xacro:inertial_box mass="${total_weight}" x="${total_length}" y="${total_width}" z="${total_height}">
+            <xacro:inertial_box mass="${total_weight}" x="${total_height}" y="${total_width}" z="${total_length}">
                 <origin xyz="0 0 0" rpy="0 0 0" />
             </xacro:inertial_box>
-            <collision> <!-- Does not work! -->
-                <origin xyz="0 0 ${2*total_height}" rpy="0 0 0" />
+            <!-- All values here are completely made up. For your own sake, don't try to understand them -->
+            <collision> <!-- Top Bar -->
+                <origin xyz="0 0 ${total_height-bar_height/2+0.001}" rpy="0 0 0" />
                 <geometry>
-                    <box size="${total_length} ${total_width} ${total_height}" />
+                    <box size="${total_width} ${total_length} ${bar_height}"/>
                 </geometry>
-                <material name="blue" />
+            </collision>
+            <collision> <!-- Bottom Bar -->
+                <origin xyz="0 0 ${bar_height/2+0.001}" rpy="0 0 0" />
+                <geometry>
+                    <box size="${total_width} ${total_length} ${bar_height}"/>
+                </geometry>
+            </collision>
+            <collision> <!-- Left Bar -->
+                <origin xyz="${-total_width/2-bar_width/2+0.001} 0 ${total_height/2+0.001}" rpy="0 0 0" />
+                <geometry>
+                    <box size="${bar_width} ${total_length} ${total_height}"/>
+                </geometry>
+            </collision>
+            <collision> <!-- Right Bar -->
+                <origin xyz="${total_width/2+bar_width/2-0.001} 0 ${total_height/2+0.001}" rpy="0 0 0" />
+                <geometry>
+                    <box size="${bar_width} ${total_length} ${total_height}"/>
+                </geometry>
             </collision>
             <visual>
-                <origin xyz=".5 ${-4/3} ${-2/3}" rpy="0 0 0" /> <!-- Origin is offset to center the model, if there are problems, reset this to 0 0 0 -->
+                <origin xyz="${-50/123} ${-total_length/2} ${-1/16}" rpy="0 0 0" /> <!-- The model is *very slightly offset, even with @Nithin's model changes -->
                 <geometry>
                     <mesh filename="package://elevator_bot_description/meshes/2ndStageStructure.stl" scale="0.001 0.001 0.001" />
                 </geometry>
                 <material name="blue" />
             </visual>
         </link>
-        <!-- DEBUG: A separate part to help line up the collision with the model -->
-        <link name="temporary_box">
-            <visual>
-                <origin xyz="0 0 ${11*total_height}" rpy="0 0 0" />
-                <geometry>
-                    <box size="${total_width} ${total_height} ${total_length}" />
-                </geometry>
-                <material name="grey_overlay" />
-            </visual>
-        </link>
     </xacro:macro>
-
 </robot>
