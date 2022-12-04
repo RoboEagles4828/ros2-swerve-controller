@@ -12,8 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef SWERVE_HARDWARE__ISAAC_DRIVE_HPP_
-#define SWERVE_HARDWARE__ISAAC_DRIVE_HPP_
+#ifndef SWERVE_HARDWARE__TEST_DRIVE_HPP_
+#define SWERVE_HARDWARE__TEST_DRIVE_HPP_
 
 #include <memory>
 #include <string>
@@ -29,19 +29,15 @@
 #include "rclcpp_lifecycle/state.hpp"
 #include "swerve_hardware/visibility_control.h"
 #include "rclcpp/rclcpp.hpp"
-#include "sensor_msgs/msg/joint_state.hpp"
-#include "realtime_tools/realtime_box.h"
-#include "realtime_tools/realtime_buffer.h"
-#include "realtime_tools/realtime_publisher.h"
 
 using CallbackReturn = rclcpp_lifecycle::node_interfaces::LifecycleNodeInterface::CallbackReturn;
 
 namespace swerve_hardware
 {
-class IsaacDriveHardware : public hardware_interface::SystemInterface
+class TestDriveHardware : public hardware_interface::SystemInterface
 {
 public:
-  RCLCPP_SHARED_PTR_DEFINITIONS(IsaacDriveHardware)
+  RCLCPP_SHARED_PTR_DEFINITIONS(TestDriveHardware)
 
   SWERVE_HARDWARE_PUBLIC
   CallbackReturn on_init(const hardware_interface::HardwareInfo & info) override;
@@ -65,34 +61,23 @@ public:
   hardware_interface::return_type write() override;
 
 private:
-  // Parameters for the DiffBot simulation
-  double hw_start_sec_;
-  double hw_stop_sec_;
-
   // Store the command for the simulated robot
   std::vector<double> hw_command_velocity_;
   std::vector<double> hw_command_position_;
+
+  // Map for easy lookup name -> joint command value
+  std::map<std::string, uint> names_to_vel_cmd_map_;
+  std::map<std::string, uint> names_to_pos_cmd_map_;
+
+  // The state vectors
   std::vector<double> hw_positions_;
   std::vector<double> hw_velocities_;
-  std::vector<double> empty_;
+
+  // Joint name array will align with state and command interface array
+  // The command at index 3 of hw_command_ will be the joint name at index 3 of joint_names
   std::vector<std::string> joint_names_;
-  std::vector<std::string> joint_names_velocity_;
-  std::vector<std::string> joint_names_position_;
-
-  std::map<std::string, uint> joint_names_map_;
-
-
-  // Pub Sub to isaac
-  rclcpp::Node::SharedPtr node_;
-  std::shared_ptr<rclcpp::Publisher<sensor_msgs::msg::JointState>> isaac_publisher_ = nullptr;
-  std::shared_ptr<realtime_tools::RealtimePublisher<sensor_msgs::msg::JointState>>
-    realtime_isaac_publisher_ = nullptr;
-
-  bool subscriber_is_active_ = false;
-  rclcpp::Subscription<sensor_msgs::msg::JointState>::SharedPtr isaac_subscriber_ = nullptr;
-  realtime_tools::RealtimeBox<std::shared_ptr<sensor_msgs::msg::JointState>> received_joint_msg_ptr_{nullptr};
 };
 
 }  // namespace swerve_hardware
 
-#endif  // SWERVE_HARDWARE__DIFFBOT_SYSTEM_HPP_
+#endif  // SWERVE_HARDWARE__TEST_DRIVE_HPP_

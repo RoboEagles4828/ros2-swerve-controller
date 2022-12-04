@@ -13,14 +13,14 @@ swerve_controller:
   ros__parameters:
     front_left_wheel_joint: "front_left_wheel_joint"
     front_right_wheel_joint: "front_right_wheel_joint"
-    rear_left_wheel_joint: "rear_left_wheel_joint"
-    rear_right_wheel_joint: "rear_right_wheel_joint"
+    rear_left_wheel_joint: "back_left_wheel_joint"
+    rear_right_wheel_joint: "back_right_wheel_joint"
     front_left_axle_joint: "front_left_axle_joint"
     front_right_axle_joint: "front_right_axle_joint"
-    rear_left_axle_joint: "rear_left_axle_joint"
-    rear_right_axle_joint: "rear_right_axle_joint"
+    rear_left_axle_joint: "back_left_axle_joint"
+    rear_right_axle_joint: "back_right_axle_joint"
     chassis_length: 0.7366
     chassis_width: 0.7366
-
-    cmd_vel_timeout: 0.5
+    wheel_radius: 0.1016
+    cmd_vel_timeout: 10.0
     use_stamped_vel: false

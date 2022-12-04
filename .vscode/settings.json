@@ -5,7 +5,11 @@
     "python.analysis.extraPaths": [
         "/opt/ros/galactic/lib/python3.8/site-packages"
     ],
+    "ros.distro": "galactic",
     "files.associations": {
+        "string": "cpp",
+        "typeindex": "cpp",
+        "typeinfo": "cpp",
         "cctype": "cpp",
         "clocale": "cpp",
         "cmath": "cpp",
@@ -47,7 +51,6 @@
         "optional": "cpp",
         "random": "cpp",
         "ratio": "cpp",
-        "string": "cpp",
         "string_view": "cpp",
         "system_error": "cpp",
         "tuple": "cpp",
@@ -71,8 +74,6 @@
         "thread": "cpp",
         "cfenv": "cpp",
         "cinttypes": "cpp",
-        "typeindex": "cpp",
-        "typeinfo": "cpp",
         "variant": "cpp"
     }
 }

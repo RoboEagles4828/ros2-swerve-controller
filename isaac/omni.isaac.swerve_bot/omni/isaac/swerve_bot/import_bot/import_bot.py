@@ -16,7 +16,8 @@ import carb
 def set_drive_params(drive, stiffness, damping, max_force):
     drive.GetStiffnessAttr().Set(stiffness)
     drive.GetDampingAttr().Set(damping)
-    drive.GetMaxForceAttr().Set(max_force)
+    if(max_force != 0.0):
+        drive.GetMaxForceAttr().Set(max_force)
     return
 
 class ImportBot(BaseSample):
@@ -88,10 +89,10 @@ class ImportBot(BaseSample):
         front_right_wheel = UsdPhysics.DriveAPI.Get(stage.GetPrimAtPath(f"{robot_prim_path}/front_right_axle_link/front_right_wheel_joint"), "angular")
         back_left_wheel = UsdPhysics.DriveAPI.Get(stage.GetPrimAtPath(f"{robot_prim_path}/back_left_axle_link/back_left_wheel_joint"), "angular")
         back_right_wheel = UsdPhysics.DriveAPI.Get(stage.GetPrimAtPath(f"{robot_prim_path}/back_right_axle_link/back_right_wheel_joint"), "angular")
-        set_drive_params(front_left_axle, 0, math.radians(1e5), 98.0)
-        set_drive_params(front_right_axle, 0, math.radians(1e5), 98.0)
-        set_drive_params(back_left_axle, 0, math.radians(1e5), 98.0)
-        set_drive_params(back_right_axle, 0, math.radians(1e5), 98.0)
+        set_drive_params(front_left_axle, 10000000.0, 100000.0, 98.0)
+        set_drive_params(front_right_axle, 10000000.0, 100000.0, 98.0)
+        set_drive_params(back_left_axle, 10000000.0, 100000.0, 98.0)
+        set_drive_params(back_right_axle, 10000000.0, 100000.0, 98.0)
         set_drive_params(front_left_wheel, 0, math.radians(1e5), 98.0)
         set_drive_params(front_right_wheel, 0, math.radians(1e5), 98.0)
         set_drive_params(back_left_wheel, 0, math.radians(1e5), 98.0)
@@ -240,6 +241,7 @@ class ImportBot(BaseSample):
                     ("Context.outputs:context", "SubscribeJointState.inputs:context"),
                     ("SubscribeJointState.outputs:jointNames", "articulation_controller.inputs:jointNames"),
                     ("SubscribeJointState.outputs:velocityCommand", "articulation_controller.inputs:velocityCommand"),
+                    ("SubscribeJointState.outputs:positionCommand", "articulation_controller.inputs:positionCommand"),
                 ],
             }
         )

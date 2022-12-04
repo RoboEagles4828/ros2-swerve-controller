@@ -75,8 +75,8 @@ CallbackReturn SwerveController::on_init()
     auto_declare<std::string>("rear_left_axle_joint", rear_left_axle_joint_name_);
     auto_declare<std::string>("rear_right_axle_joint", rear_right_axle_joint_name_);
 
-    auto_declare<double>("chassis_center_to_axle", wheel_params_.x_offset);
-    auto_declare<double>("axle_center_to_wheel", wheel_params_.y_offset);
+    auto_declare<double>("chassis_length", wheel_params_.x_offset);
+    auto_declare<double>("chassis_width", wheel_params_.y_offset);
     auto_declare<double>("wheel_radius", wheel_params_.radius);
 
     auto_declare<double>("cmd_vel_timeout", cmd_vel_timeout_.count() / 1000.0);
@@ -98,16 +98,16 @@ InterfaceConfiguration SwerveController::command_interface_configuration() const
   conf_names.push_back(front_right_wheel_joint_name_ + "/" + HW_IF_VELOCITY);
   conf_names.push_back(rear_left_wheel_joint_name_ + "/" + HW_IF_VELOCITY);
   conf_names.push_back(rear_right_wheel_joint_name_ + "/" + HW_IF_VELOCITY);
+  conf_names.push_back(front_left_axle_joint_name_ + "/" + HW_IF_POSITION);
+  conf_names.push_back(front_right_axle_joint_name_ + "/" + HW_IF_POSITION);
+  conf_names.push_back(rear_left_axle_joint_name_ + "/" + HW_IF_POSITION);
+  conf_names.push_back(rear_right_axle_joint_name_ + "/" + HW_IF_POSITION);
   return {interface_configuration_type::INDIVIDUAL, conf_names};
 }
 
 InterfaceConfiguration SwerveController::state_interface_configuration() const
 { 
-  std::vector<std::string> conf_names;
-  conf_names.push_back(front_left_axle_joint_name_ + "/" + HW_IF_POSITION);
-  conf_names.push_back(front_right_axle_joint_name_ + "/" + HW_IF_POSITION);
-  conf_names.push_back(rear_left_axle_joint_name_ + "/" + HW_IF_POSITION);
-  conf_names.push_back(rear_right_axle_joint_name_ + "/" + HW_IF_POSITION);
+  
   return {interface_configuration_type::NONE};
 }
 
@@ -150,23 +150,27 @@ controller_interface::return_type SwerveController::update(
   double & angular_cmd = command.twist.angular.z;
 
   double x_offset = wheel_params_.x_offset;
-  //double radius = wheel_params_.radius;
+  double radius = wheel_params_.radius;
 
   // Compute Wheel Velocities and Positions
   const double a =  linear_x_cmd - angular_cmd * x_offset / 2;
+
   const double b =  linear_x_cmd + angular_cmd * x_offset / 2;
+
   const double c =  linear_y_cmd - angular_cmd * x_offset / 2;
+
   const double d =  linear_y_cmd + angular_cmd * x_offset / 2;
 
-  const double front_left_velocity = (sqrt( pow( b , 2) + pow ( d , 2) ) );
-  const double front_right_velocity = (sqrt( pow( b , 2) + pow( c , 2 ) ) );
-  const double rear_left_velocity = (sqrt( pow( a , 2 ) + pow( d , 2) ) );
-  const double rear_right_velocity = (sqrt( pow( a, 2 ) + pow( c , 2) ) );
 
-  const double front_left_position = atan2(b,d)*180/M_PI;
-  const double front_right_position = atan2(b,c)*180/M_PI;
-  const double rear_left_position = atan2(a,d)*180/M_PI;
-  const double rear_right_postition = atan2(a,c)*180/M_PI;
+  const double front_left_velocity = (sqrt( pow( b , 2) + pow ( d , 2) ) )*(1/(radius*M_PI));
+  const double front_right_velocity = (sqrt( pow( b , 2) + pow( c , 2 ) ) )*(1/(radius*M_PI));
+  const double rear_left_velocity = (sqrt( pow( a , 2 ) + pow( d , 2) ) )*(1/(radius*M_PI));
+  const double rear_right_velocity = (sqrt( pow( a, 2 ) + pow( c , 2) ) )*(1/(radius*M_PI));
+
+  const double front_left_position = atan2(b,d);
+  const double front_right_position = atan2(b,c);
+  const double rear_left_position = atan2(a,d);
+  const double rear_right_postition = atan2(a,c);
 
   // Set Wheel Velocities
   front_left_handle_->set_velocity(front_left_velocity);
@@ -236,8 +240,8 @@ CallbackReturn SwerveController::on_configure(const rclcpp_lifecycle::State &)
     return CallbackReturn::ERROR;
   }
 
-  wheel_params_.x_offset = node_->get_parameter("chassis_center_to_axle").as_double();
-  wheel_params_.y_offset = node_->get_parameter("axle_center_to_wheel").as_double();
+  wheel_params_.x_offset = node_->get_parameter("chassis_length").as_double();
+  wheel_params_.y_offset = node_->get_parameter("chassis_width").as_double();
   wheel_params_.radius = node_->get_parameter("wheel_radius").as_double();
 
   cmd_vel_timeout_ = std::chrono::milliseconds{
