@@ -6,6 +6,7 @@ from omni.isaac.core.robots import Robot
 from omni.isaac.core.utils import prims
 from omni.isaac.core_nodes.scripts.utils import set_target_prims
 from omni.kit.viewport_legacy import get_default_viewport_window
+from omni.isaac.core.utils.nucleus import get_assets_root_path
 from pxr import UsdPhysics
 import omni.kit.commands
 import os
@@ -53,6 +54,7 @@ class ImportBot(BaseSample):
         return
     
     def import_robot(self, urdf_path):
+        world = self.get_world()
         import_config = _urdf.ImportConfig()
         import_config.merge_fixed_joints = False
         import_config.fix_base = False
@@ -65,11 +67,18 @@ class ImportBot(BaseSample):
         import_config.default_drive_type = _urdf.UrdfJointTargetType.JOINT_DRIVE_VELOCITY
         import_config.distance_scale = 1.0
         import_config.density = 0.0
+        path_to_usd = os.path.abspath(os.path.join(urdf_path, "../"))
+        print(path_to_usd)
+        path_to_usd = os.path.join(path_to_usd, "swerve.usd")
         result, prim_path = omni.kit.commands.execute( "URDFParseAndImportFile", 
             urdf_path=urdf_path,
-            import_config=import_config)
+            import_config=import_config,dest_path=path_to_usd)
+        prim_path = omni.usd.get_stage_next_free_path(world.scene.stage, str(world.scene.stage.GetDefaultPrim().GetPath()) + prim_path, False)
+        robot_prim = world.scene.stage.OverridePrim(prim_path)
+        robot_prim.GetReferences().AddReference(path_to_usd)
 
         if result:
+            print(prim_path)
             return prim_path
         return None
 
@@ -89,10 +98,10 @@ class ImportBot(BaseSample):
         front_right_wheel = UsdPhysics.DriveAPI.Get(stage.GetPrimAtPath(f"{robot_prim_path}/front_right_axle_link/front_right_wheel_joint"), "angular")
         back_left_wheel = UsdPhysics.DriveAPI.Get(stage.GetPrimAtPath(f"{robot_prim_path}/back_left_axle_link/back_left_wheel_joint"), "angular")
         back_right_wheel = UsdPhysics.DriveAPI.Get(stage.GetPrimAtPath(f"{robot_prim_path}/back_right_axle_link/back_right_wheel_joint"), "angular")
-        set_drive_params(front_left_axle, 10000000.0, 100000.0, 98.0)
-        set_drive_params(front_right_axle, 10000000.0, 100000.0, 98.0)
-        set_drive_params(back_left_axle, 10000000.0, 100000.0, 98.0)
-        set_drive_params(back_right_axle, 10000000.0, 100000.0, 98.0)
+        set_drive_params(front_left_axle, 10000000.0, 100000.0, 50.0)
+        set_drive_params(front_right_axle, 10000000.0, 100000.0, 50.0)
+        set_drive_params(back_left_axle, 10000000.0, 100000.0, 50.0)
+        set_drive_params(back_right_axle, 10000000.0, 100000.0, 50.0)
         set_drive_params(front_left_wheel, 0, math.radians(1e5), 98.0)
         set_drive_params(front_right_wheel, 0, math.radians(1e5), 98.0)
         set_drive_params(back_left_wheel, 0, math.radians(1e5), 98.0)

@@ -167,11 +167,22 @@ controller_interface::return_type SwerveController::update(
   const double rear_left_velocity = (sqrt( pow( a , 2 ) + pow( d , 2) ) )*(1/(radius*M_PI));
   const double rear_right_velocity = (sqrt( pow( a, 2 ) + pow( c , 2) ) )*(1/(radius*M_PI));
 
-  const double front_left_position = atan2(b,d);
-  const double front_right_position = atan2(b,c);
-  const double rear_left_position = atan2(a,d);
-  const double rear_right_postition = atan2(a,c);
-
+  double front_left_position = atan2(b,d);
+  double front_right_position = atan2(b,c);
+  double rear_left_position = atan2(a,d);
+  double rear_right_position = atan2(a,c);
+  if(front_left_position==-180){
+    front_left_position=0;
+  }
+  if(front_right_position==-180){
+    front_right_position=0;
+  }
+  if(rear_left_position==-180){
+    rear_left_position=0;
+  }
+  if(rear_right_position==-180){
+    rear_right_position=0;
+  }
   // Set Wheel Velocities
   front_left_handle_->set_velocity(front_left_velocity);
   front_right_handle_->set_velocity(front_right_velocity);
@@ -182,7 +193,7 @@ controller_interface::return_type SwerveController::update(
   front_left_handle_2_->set_position(front_left_position);
   front_right_handle_2_->set_position(front_right_position);
   rear_left_handle_2_->set_position(rear_left_position);
-  rear_right_handle_2_->set_position(rear_right_postition);
+  rear_right_handle_2_->set_position(rear_right_position);
 
   // Time update
   const auto update_dt = current_time - previous_update_timestamp_;
