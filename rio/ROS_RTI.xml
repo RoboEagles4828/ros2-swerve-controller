@@ -24,18 +24,12 @@ This code contains trade secrets of Real-Time Innovations, Inc.
 
     <!-- types -->
     <types>
-      <module name="std_msgs">
+      <module name="sensor_msgs">
         <module name="msg">
           <module name="dds_">
             <struct name="joystick">
-              <member name="rX" type="float32"/>
-              <member name="rY" type="float32"/>
-              <member name="lX" type="float32"/>
-              <member name="lY" type="float32"/>
-              <member name="X" type="boolean"/>
-              <member name="Y" type="boolean"/>
-              <member name="A" type="boolean"/>
-              <member name="B" type="boolean"/>
+              <member name="axes" type="float32" sequenceMaxLength="-1"/>
+              <member name="buttons" type="long" sequenceMaxLength="-1"/>
             </struct>
           </module>
         </module>
@@ -45,8 +39,8 @@ This code contains trade secrets of Real-Time Innovations, Inc.
     <!-- Domain Library -->
     <domain_library name="ROS2_DOMAIN_LIB">
         <domain name="ROS2_DOMAIN" domain_id="4828">
-            <register_type name="std_msgs::msg::dds_::joystick" type_ref="std_msgs::msg::dds_::joystick" />
-            <topic name="rt/joystick_data" register_type_ref="std_msgs::msg::dds_::joystick"/>
+            <register_type name="sensor_msgs::msg::dds_::joystick" type_ref="sensor::msg::dds_::joystick" />
+            <topic name="rt/joystick_data" register_type_ref="sensor::msg::dds_::joystick"/>
         </domain>
     </domain_library>
 

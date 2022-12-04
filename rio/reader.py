@@ -29,13 +29,7 @@ with rti.open_connector(
         for sample in input.samples.valid_data_iter:
             # You can get all the fields in a get_dictionary()
             data = sample.get_dictionary()
-            rX = data['rX']
-            rY = data['rY']
-            lX = data['lX']
-            lY = data['lY']
-            X = data['X']
-            Y = data['Y']
-            A = data['A']
-            B = data['B']
+            axes = data['axes']
+            buttons = data['buttons']
             
-            print("RightStick_X: " + repr(rX) + "\nRightStick_Y: " + repr(rY) + "\nLeftStick_X: " + repr(lX) + "\nLeftStick_y: " + repr(lY) + "\nX: " + repr(X) + "\nY: " + repr(Y) + "\nA: " + repr(A) + "\nB: " + repr(B) + "\n")
+            print("Axes: " + str(axes) + "\nButtons: " + str(buttons))

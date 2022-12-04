@@ -7,6 +7,7 @@
 ###############################################################################
 
 from time import sleep
+import wpilib_joystick
 
 # Updating the system path is not required if you have pip-installed
 # rticonnextdds-connector
@@ -24,14 +25,9 @@ with rti.open_connector(
 
     print("Writing...")
     while (True):
-        output.instance.set_number("rX", i)
-        output.instance.set_number("rY", i*2)
-        output.instance.set_number("lX", 30)
-        output.instance.set_string("lY", "BLUE")
-        output.instance.set_number("X", i)
-        output.instance.set_number("Y", i*2)
-        output.instance.set_number("A", 30)
-        output.instance.set_string("B", "BLUE")
+        axes = wpilib_joystick.getAxes()
+        buttons = wpilib_joystick.getButtons()
+        output.instance.set_dictionary({"axes":axes, "buttons":buttons})
         output.write()
 
         sleep(0.5) # Write at a rate of one sample every 0.5 seconds, for ex.
