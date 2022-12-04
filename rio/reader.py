@@ -19,7 +19,7 @@ import rticonnextdds_connector as rti
 
 with rti.open_connector(
         config_name="MyParticipantLibrary::MySubParticipant",
-        url=file_path + "/../ShapeExample.xml") as connector:
+        url="./ShapeExample.xml") as connector:
 
     input = connector.get_input("MySubscriber::MySquareReader")
 

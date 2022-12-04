@@ -19,7 +19,7 @@ import rticonnextdds_connector as rti
 
 with rti.open_connector(
         config_name="MyParticipantLibrary::MyPubParticipant",
-        url=file_path + "/../ShapeExample.xml") as connector:
+        url="./ShapeExample.xml") as connector:
 
     output = connector.get_output("MyPublisher::MySquareWriter")
 
