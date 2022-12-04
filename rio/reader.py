@@ -10,18 +10,14 @@ from __future__ import print_function
 
 # Updating the system path is not required if you have pip-installed
 # rticonnextdds-connector
-from sys import path as sys_path
-from os import path as os_path
-file_path = os_path.dirname(os_path.realpath(__file__))
-sys_path.append(file_path + "/../../../")
 
 import rticonnextdds_connector as rti
 
 with rti.open_connector(
-        config_name="MyParticipantLibrary::MySubParticipant",
-        url="./ShapeExample.xml") as connector:
+        config_name="ROS2_PARTICIPANT_LIB::subscriber",
+        url="./ROS_RTI.xml") as connector:
 
-    input = connector.get_input("MySubscriber::MySquareReader")
+    input = connector.get_input("rio_data_subscriber::rio_data_reader")
 
     print("Waiting for publications...")
     input.wait_for_publications() # wait for at least one matching publication
@@ -33,11 +29,13 @@ with rti.open_connector(
         for sample in input.samples.valid_data_iter:
             # You can get all the fields in a get_dictionary()
             data = sample.get_dictionary()
-            x = data['x']
-            y = data['y']
-
-            # Or you can access the field individually
-            size = sample.get_number("shapesize")
-            color = sample.get_string("color")
-            print("Received x: " + repr(x) + " y: " + repr(y) +
-                  " size: " + repr(size) + " color: " + repr(color))
+            rX = data['rX']
+            rY = data['rY']
+            lX = data['lX']
+            lY = data['lY']
+            X = data['X']
+            Y = data['Y']
+            A = data['A']
+            B = data['B']
+            
+            print("RightStick_X: " + repr(rX) + "\nRightStick_Y: " + repr(rY) + "\nLeftStick_X: " + repr(lX) + "\nLeftStick_y: " + repr(lY) + "\nX: " + repr(X) + "\nY: " + repr(Y) + "\nA: " + repr(A) + "\nB: " + repr(B) + "\n")

@@ -10,18 +10,14 @@ from time import sleep
 
 # Updating the system path is not required if you have pip-installed
 # rticonnextdds-connector
-from sys import path as sys_path
-from os import path as os_path
-file_path = os_path.dirname(os_path.realpath(__file__))
-sys_path.append(file_path + "/../../../")
 
 import rticonnextdds_connector as rti
 
 with rti.open_connector(
-        config_name="MyParticipantLibrary::MyPubParticipant",
-        url="./ShapeExample.xml") as connector:
+        config_name="ROS2_PARTICPANT_LIB::publisher",
+        url="./ROS_RTI.xml") as connector:
 
-    output = connector.get_output("MyPublisher::MySquareWriter")
+    output = connector.get_output("jostick_data_publisher::jostick_data_writer")
 
     print("Waiting for subscriptions...")
     output.wait_for_subscriptions()

@@ -27,8 +27,15 @@ This code contains trade secrets of Real-Time Innovations, Inc.
       <module name="std_msgs">
         <module name="msg">
           <module name="dds_">
-            <struct name="Float32_">
-              <member name="data" type="float32"/>
+            <struct name="joystick">
+              <member name="rX" type="float32"/>
+              <member name="rY" type="float32"/>
+              <member name="lX" type="float32"/>
+              <member name="lY" type="float32"/>
+              <member name="X" type="boolean"/>
+              <member name="Y" type="boolean"/>
+              <member name="A" type="boolean"/>
+              <member name="B" type="boolean"/>
             </struct>
           </module>
         </module>
@@ -38,8 +45,8 @@ This code contains trade secrets of Real-Time Innovations, Inc.
     <!-- Domain Library -->
     <domain_library name="ROS2_DOMAIN_LIB">
         <domain name="ROS2_DOMAIN" domain_id="4828">
-            <register_type name="std_msgs::msg::dds_::Float32_" type_ref="std_msgs::msg::dds_::Float32_" />
-            <topic name="rt/joystick_data" register_type_ref="std_msgs::msg::dds_::Float32_"/>
+            <register_type name="std_msgs::msg::dds_::joystick" type_ref="std_msgs::msg::dds_::joystick" />
+            <topic name="rt/joystick_data" register_type_ref="std_msgs::msg::dds_::joystick"/>
         </domain>
     </domain_library>
 
@@ -52,8 +59,8 @@ This code contains trade secrets of Real-Time Innovations, Inc.
         </domain_participant>
 
         <domain_participant name="subscriber" domain_ref="ROS2_DOMAIN_LIB::ROS2_DOMAIN">
-            <subscriber name="josystick_data_subscriber">
-                <data_reader name="joystick_data_reader" topic_ref="rt/joystick_data" />
+            <subscriber name="rio_data_subscriber">
+                <data_reader name="rio_data_reader" topic_ref="rt/rio_to_orin" />
             </subscriber>
         </domain_participant>
     </domain_participant_library>
