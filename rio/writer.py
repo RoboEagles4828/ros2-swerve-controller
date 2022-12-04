@@ -23,11 +23,15 @@ with rti.open_connector(
     output.wait_for_subscriptions()
 
     print("Writing...")
-    for i in range(1, 100):
-        output.instance.set_number("x", i)
-        output.instance.set_number("y", i*2)
-        output.instance.set_number("shapesize", 30)
-        output.instance.set_string("color", "BLUE")
+    while (True):
+        output.instance.set_number("rX", i)
+        output.instance.set_number("rY", i*2)
+        output.instance.set_number("lX", 30)
+        output.instance.set_string("lY", "BLUE")
+        output.instance.set_number("X", i)
+        output.instance.set_number("Y", i*2)
+        output.instance.set_number("A", 30)
+        output.instance.set_string("B", "BLUE")
         output.write()
 
         sleep(0.5) # Write at a rate of one sample every 0.5 seconds, for ex.
