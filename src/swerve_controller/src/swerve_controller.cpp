@@ -61,7 +61,7 @@ void Axle::set_position(double position)
 double Axle::get_position(void) 
 {
   //temporary
-  return 0;
+  return position_.get().get_value();
 }
 SwerveController::SwerveController() : controller_interface::ControllerInterface() {}
 
@@ -171,15 +171,82 @@ controller_interface::return_type SwerveController::update(
   const double d =  linear_y_cmd + angular_cmd * x_offset / 2;
 
 
-  const double front_left_velocity = (sqrt( pow( b , 2) + pow ( d , 2) ) )*(1/(radius*M_PI));
-  const double front_right_velocity = (sqrt( pow( b , 2) + pow( c , 2 ) ) )*(1/(radius*M_PI));
-  const double rear_left_velocity = (sqrt( pow( a , 2 ) + pow( d , 2) ) )*(1/(radius*M_PI));
-  const double rear_right_velocity = (sqrt( pow( a, 2 ) + pow( c , 2) ) )*(1/(radius*M_PI));
 
-  const double front_left_position = atan2(b,d);
-  const double front_right_position = atan2(b,c);
-  const double rear_left_position = atan2(a,d);
-  const double rear_right_postition = atan2(a,c);
+  //gte current wheel positions
+  const double front_left_current_pos = front_left_handle_2_->get_position();
+  const double front_right_current_pos = front_right_handle_2_->get_position();
+  const double rear_left_current_pos = rear_left_handle_2_->get_position();
+  const double rear_right_current_pos = rear_right_handle_2_->get_position();
+  //RCLCPP_INFO(rclcpp::get_logger("update"), "%f", pos1);
+
+
+  double front_left_velocity = (sqrt( pow( b , 2) + pow ( d , 2) ) )*(1/(radius*M_PI));
+  double front_right_velocity = (sqrt( pow( b , 2) + pow( c , 2 ) ) )*(1/(radius*M_PI));
+  double rear_left_velocity = (sqrt( pow( a , 2 ) + pow( d , 2) ) )*(1/(radius*M_PI));
+  double rear_right_velocity = (sqrt( pow( a, 2 ) + pow( c , 2) ) )*(1/(radius*M_PI));
+
+  double front_left_position = atan2(b,d);
+  double front_right_position = atan2(b,c);
+  double rear_left_position = atan2(a,d);
+  double rear_right_position = atan2(a,c);
+
+  //optimization
+
+  //front_left
+  //RCLCPP_INFO(logger, "front_left_current_pos: %f, front_left_position %f", front_left_current_pos, front_left_position);
+  if (abs(front_left_current_pos - front_left_position) > M_PI / 2) {
+  //if (true) {
+    front_left_position -= M_PI;
+
+    //convert to degrees
+    front_left_position = ((180 / M_PI) * front_left_position);
+    //keep it in -90 to 90 scope
+    front_left_position = ((int)(front_left_position) + 90) % 180 - 90;
+    //convert back to radians
+    front_left_position = (M_PI / 180) * front_left_position;
+
+    front_left_velocity *= -1;
+  }
+  //front_right
+  if (abs(front_right_current_pos - front_right_position) > M_PI / 2) {
+    front_right_position -= M_PI;
+
+    //convert to degrees
+    front_right_position = ((180 / M_PI) * front_right_position);
+    //keep it in -90 to 90 scope
+    front_right_position = ((int)(front_right_position) + 90) % 180 - 90;
+    //convert back to radians
+    front_right_position = (M_PI / 180) * front_right_position;
+
+    front_right_velocity *= -1;
+  }
+  //rear_left
+  if (abs(rear_left_current_pos - rear_left_position) > M_PI / 2) {
+    rear_left_position -= M_PI;
+
+    //convert to degrees
+    rear_left_position = ((180 / M_PI) * rear_left_position);
+    //keep it in -90 to 90 scope
+    rear_left_position = ((int)(rear_left_position) + 90) % 180 - 90;
+    //convert back to radians
+    rear_left_position = (M_PI / 180) * rear_left_position;
+
+    rear_left_velocity *= -1;
+  }
+  //rear right
+  if (abs(rear_right_current_pos - rear_right_position) > M_PI / 2) {
+    rear_right_position -= M_PI;
+
+    //convert to degrees
+    rear_right_position = ((180 / M_PI) * rear_right_position);
+    //keep it in -90 to 90 scope
+    rear_right_position = ((int)(rear_right_position) + 90) % 180 - 90;
+    //convert back to radians
+    rear_right_position = (M_PI / 180) * rear_right_position;
+
+    rear_right_velocity *= -1;
+  }
+  RCLCPP_INFO(logger, "front_left_velocity: %f", front_left_velocity);
 
   // Set Wheel Velocities
   front_left_handle_->set_velocity(front_left_velocity);
@@ -187,11 +254,21 @@ controller_interface::return_type SwerveController::update(
   rear_left_handle_->set_velocity(rear_left_velocity);
   rear_right_handle_->set_velocity(rear_right_velocity);
 
-   // Set Wheel Positions 
+   // Set Wheel Positions
+   //remmeber to comment thi back in! 
   front_left_handle_2_->set_position(front_left_position);
   front_right_handle_2_->set_position(front_right_position);
   rear_left_handle_2_->set_position(rear_left_position);
-  rear_right_handle_2_->set_position(rear_right_postition);
+  rear_right_handle_2_->set_position(rear_right_position);
+  //remmeber to comment thi back in!
+
+  //test TEMPORARY!
+  //front_left_handle_2_->set_position(M_PI * 2.5);
+  //front_right_handle_2_->set_position(front_right_position);
+  //rear_left_handle_2_->set_position(rear_left_position);
+  //rear_right_handle_2_->set_position(rear_right_position);
+  //test TEMPORARY!
+
 
   // Time update
   const auto update_dt = current_time - previous_update_timestamp_;

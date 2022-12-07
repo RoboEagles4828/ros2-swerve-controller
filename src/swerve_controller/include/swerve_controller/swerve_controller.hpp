@@ -68,9 +68,6 @@ class Axle {
     // std::string name;
     std::reference_wrapper<hardware_interface::LoanedCommandInterface> position_;
     std::string name;
-    
-
-
 
 };
 
