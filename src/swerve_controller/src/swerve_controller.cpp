@@ -58,8 +58,10 @@ void Axle::set_position(double position)
 {
   position_.get().set_value(position);
 }
-void Axle::get_position(void) 
+double Axle::get_position(void) 
 {
+  //temporary
+  return 0;
 }
 SwerveController::SwerveController() : controller_interface::ControllerInterface() {}
 
