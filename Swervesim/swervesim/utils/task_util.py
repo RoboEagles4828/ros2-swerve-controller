@@ -33,7 +33,7 @@ def initialize_task(config, env, init_sim=True):
     from .config_utils.sim_config import SimConfig
     sim_config = SimConfig(config)
 
-    task = SwerveTask("Swerve", sim_config, env)
+    task = SwerveTask("swerve", sim_config, env)
 
     env.set_task(task=task, sim_params=sim_config.get_physics_params(), backend="torch", init_sim=init_sim)
 

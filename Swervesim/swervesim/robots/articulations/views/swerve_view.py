@@ -45,8 +45,8 @@ class SwerveView(ArticulationView):
             reset_xform_properties=False
         )
         
-        self._axles = RigidPrimView(prim_paths_expr="/World/envs/.*/swerve/swerve_chassis_link/.*_axle_joint", name="axle_view", reset_xform_properties=False)
-        self._wheel = RigidPrimView(prim_paths_expr="/World/envs/.*/swerve/.*_axle_link/.*_wheel_link", name="wheel_view", reset_xform_properties=False)
+        self._axles = RigidPrimView(prim_paths_expr="/World/envs/.*/swerve/.*_axle_joint", name="axle_view", reset_xform_properties=False)
+        self._wheel = RigidPrimView(prim_paths_expr="/World/envs/.*/swerve/.*_wheel_link", name="wheel_view", reset_xform_properties=False)
         self._base = RigidPrimView(prim_paths_expr="/World/envs/.*/swerve/swerve_chassis_link", name="base_view", reset_xform_properties=False)
 
     # def get_knee_transforms(self):

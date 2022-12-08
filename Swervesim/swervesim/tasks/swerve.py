@@ -30,6 +30,8 @@ from swervesim.tasks.base.rl_task import RLTask
 from swervesim.robots.articulations.swerve import Swerve
 from swervesim.robots.articulations.views.swerve_view import SwerveView
 from swervesim.tasks.utils.usd_utils import set_drive
+from omni.isaac.core.objects import DynamicSphere
+
 
 from omni.isaac.core.utils.prims import get_prim_at_path
 
@@ -102,6 +104,7 @@ class SwerveTask(RLTask):
         return
 
     def set_up_scene(self, scene) -> None:
+        self.get_target()
         self.get_swerve()
         super().set_up_scene(scene)
         self._swerve = SwerveView(prim_paths_expr="/World/envs/.*/swerve", name="swerveview")
@@ -113,8 +116,8 @@ class SwerveTask(RLTask):
         return
 
     def get_swerve(self):
-        swerve = Swerve(prim_path=self.default_zero_env_path + "/swerve", name="swerve", translation=self._swerve_translation)
-        self._sim_config.apply_articulation_settings("Swerve", get_prim_at_path(swerve.prim_path), self._sim_config.parse_actor_config("Swerve"))
+        swerve = Swerve(self.default_zero_env_path + "/swerve", "swerve", self._swerve_translation)
+        self._sim_config.apply_articulation_settings("swerve", get_prim_at_path(swerve.prim_path), self._sim_config.parse_actor_config("swerve"))
 
         # Configure joint properties
         joint_paths = ["front_left_axle_joint",
@@ -143,7 +146,14 @@ class SwerveTask(RLTask):
             name = dof_names[i]
             angle = self.named_default_joint_angles[name]
             self.default_dof_pos[:, i] = angle
-
+    def get_target(self):
+        radius = 0.05
+        color = torch.tensor([1, 0, 0])
+        ball = DynamicSphere(
+            prim_path=self.default_zero_env_path + "/ball", 
+            name="target_0",
+            radius=radius,
+            color=color,)
     def get_observations(self) -> dict:
         torso_position, torso_rotation = self._swerve.get_world_poses(clone=False)
         root_velocities = self._swerve.get_velocities(clone=False)

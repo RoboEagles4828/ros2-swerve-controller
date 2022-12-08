@@ -35,6 +35,7 @@ from omni.isaac.core.prims import RigidPrimView
 from omni.isaac.core.robots.robot import Robot
 from omni.isaac.core.utils.nucleus import get_assets_root_path
 from omni.isaac.core.utils.stage import add_reference_to_stage
+from omni.isaac.core.utils.stage import get_current_stage
 
 import numpy as np
 import torch
@@ -43,33 +44,23 @@ import os
 from pxr import PhysxSchema
 
 class Swerve(Robot):
-    def __infit__(
-        self,
-        prim_path: str,
-        name: Optional[str] = "Swerve",
-        usd_path: Optional[str] = None,
-        translation: Optional[np.ndarray] = None,
-        orientation: Optional[np.ndarray] = None,
-    ) -> None:
-        """[summary]
-        """
-        
-        self._usd_path = usd_path
+    def __init__(self,prim_path,name,translation):
         self._name = name
 
-        if self._usd_path is None:
-            file_path = os.path.abspath(__file__)
-            project_root_path = os.path.abspath(os.path.join(file_path, "../../../../"))
-            root_path= os.path.join(project_root_path, "src/swerve_description/swerve.usd")
-            print("**************************************"+str(root_path))
-            self._usd_path = root_path
+        file_path = os.path.abspath(__file__)
+        project_root_path = os.path.abspath(os.path.join(file_path, "../../../../../"))
+        root_path= os.path.join(project_root_path, "src/swerve_description/swerve3.usd")
+        
+        print(str(root_path))
+        self._usd_path = root_path 
         add_reference_to_stage(self._usd_path, prim_path)
+        print(str(get_current_stage() ))
 
         super().__init__(
             prim_path=prim_path,
             name=name,
             translation=translation,
-            orientation=orientation,
+            orientation=None,
             articulation_controller=None,
         )
 

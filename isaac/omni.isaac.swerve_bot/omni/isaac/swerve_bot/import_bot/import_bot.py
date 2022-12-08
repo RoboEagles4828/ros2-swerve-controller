@@ -35,7 +35,7 @@ class ImportBot(BaseSample):
 
     async def setup_post_load(self):
         self._world = self.get_world()
-        self.robot_name = "Swerve"
+        self.robot_name = "swerve"
         self.extension_path = os.path.abspath(__file__)
         self.project_root_path = os.path.abspath(os.path.join(self.extension_path, "../../../../../../.."))
         self.path_to_urdf = os.path.join(self.project_root_path, "src/swerve_description/swerve.urdf")
@@ -67,15 +67,15 @@ class ImportBot(BaseSample):
         import_config.default_drive_type = _urdf.UrdfJointTargetType.JOINT_DRIVE_VELOCITY
         import_config.distance_scale = 1.0
         import_config.density = 0.0
-        path_to_usd = os.path.abspath(os.path.join(urdf_path, "../"))
-        print(path_to_usd)
-        path_to_usd = os.path.join(path_to_usd, "swerve.usd")
+        # path_to_usd = os.path.abspath(os.path.join(urdf_path, "../"))
+        # print(path_to_usd)
+        # path_to_usd = os.path.join(path_to_usd, "swerve.usd")
         result, prim_path = omni.kit.commands.execute( "URDFParseAndImportFile", 
             urdf_path=urdf_path,
-            import_config=import_config,dest_path=path_to_usd)
-        prim_path = omni.usd.get_stage_next_free_path(world.scene.stage, str(world.scene.stage.GetDefaultPrim().GetPath()) + prim_path, False)
-        robot_prim = world.scene.stage.OverridePrim(prim_path)
-        robot_prim.GetReferences().AddReference(path_to_usd)
+            import_config=import_config)
+        # prim_path = omni.usd.get_stage_next_free_path(world.scene.stage, str(world.scene.stage.GetDefaultPrim().GetPath()) + prim_path, False)
+        # robot_prim = world.scene.stage.OverridePrim(prim_path)
+        # robot_prim.GetReferences().AddReference(path_to_usd)
 
         if result:
             print(prim_path)
