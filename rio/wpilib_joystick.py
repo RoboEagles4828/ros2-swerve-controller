@@ -1,4 +1,5 @@
 import wpilib
+from RTI_Node import RTI_Node as rti
 
 class TestRobot(wpilib.TimedRobot):
     def robotInit(self) -> None:
@@ -6,6 +7,7 @@ class TestRobot(wpilib.TimedRobot):
         self.controller = wpilib.XboxController(0)
         self.axes = []
         self.buttons = []
+        self.writer = rti()
 
     def teleopInit(self) -> None:
         print("Initialized")
@@ -13,19 +15,8 @@ class TestRobot(wpilib.TimedRobot):
     def teleopPeriodic(self) -> None:
         self.axes = [self.controller.getLeftX(), self.controller.getLeftY(), self.controller.getRightX(), self.controller.getRightY()]
         self.buttons = [self.controller.getAButton(), self.controller.getBButton(), self.controller.getXButton(), self.controller.getYButton()]
+        self.writer.sendData(self.axes, self.buttons)
         print("Setting data: " + self.axes + " " + self.buttons)
-
-    def getAxes(self):
-        return self.axes
-
-    def getButtons(self):
-        return self.buttons
-
-def getAxes():
-    return TestRobot.getAxes()
-
-def getButtons():
-    return TestRobot.getButtons()
 
 if __name__ == '__main__':
     wpilib.run(TestRobot)

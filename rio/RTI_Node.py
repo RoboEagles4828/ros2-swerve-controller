@@ -14,23 +14,18 @@ import wpilib_joystick
 
 import rticonnextdds_connector as rti
 
-with rti.open_connector(
-        config_name="ROS2_PARTICPANT_LIB::publisher",
-        url="./ROS_RTI.xml") as connector:
+class RTI_Node:
 
-    output = connector.get_output("jostick_data_publisher::jostick_data_writer")
+    def __init__(self):
+        CONNECTOR_CONFIG_NAME = "ROS2_PARTICPANT_LIB::publisher"
+        CONNECTOR_URL = "./ROS_RTI.xml"
 
-    print("Waiting for subscriptions...")
-    output.wait_for_subscriptions()
+        with rti.open_connector(config_name=CONNECTOR_CONFIG_NAME, url=CONNECTOR_URL) as connector:
+            self.output = connector.get_output("jostick_data_publisher::jostick_data_writer")
 
-    print("Writing...")
-    while (True):
-        axes = wpilib_joystick.getAxes()
-        buttons = wpilib_joystick.getButtons()
-        output.instance.set_dictionary({"axes":axes, "buttons":buttons})
-        output.write()
-
-        sleep(0.5) # Write at a rate of one sample every 0.5 seconds, for ex.
-
-    print("Exiting...")
-    output.wait() # Wait for all subscriptions to receive the data before exiting
+            print("Waiting for subscriptions...")
+            self.output.wait_for_subscriptions()
+    
+    def sendData(self, axes, buttons):
+            self.output.instance.set_dictionary({"axes": axes, "buttons": buttons})
+            self.output.write()
