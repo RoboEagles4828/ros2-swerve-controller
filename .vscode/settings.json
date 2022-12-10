@@ -75,5 +75,6 @@
         "cfenv": "cpp",
         "cinttypes": "cpp",
         "variant": "cpp"
-    }
+    },
+    "python.analysis.typeCheckingMode": "off"
 }

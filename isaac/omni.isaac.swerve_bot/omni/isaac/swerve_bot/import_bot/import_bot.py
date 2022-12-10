@@ -250,6 +250,60 @@ class ImportBot(BaseSample):
         set_target_prims(primPath=f"{robot_controller_path}/PublishJointState", targetPrimPaths=[robot_prim_path])
         return
 
+    def setup_camera_action_graph(self, robot_prim_path):
+        robot_camera_path = f"{robot_prim_path}/ros_camera"
+        og.Controller.edit(
+            {"graph-path": robot_camera_path, "evaluator_name": "execution"},
+            {
+                og.Controller.Keys.CREATE_NODES: [
+                    ("OnPlaybackTick", "omni.graph.action.OnPlaybackTick"),
+                    ("ReadSimTime", "omni.isaac.core_nodes.IsaacReadSimulationTime"),
+                    ("Context", "omni.isaac.ros2_bridge.ROS2Context"),
+                    ("ros2_camera_helper", "omni.isaac.ros2_bridge.ROS2CameraHelper"),
+                    ("ros2_camera_helper_02", "omni.isaac.ros2_bridge.ROS2CameraHelper"),
+                    ("ros2_camera_helper_03", "omni.isaac.ros2_bridge.ROS2CameraHelper"),
+                    ("isaac_create_viewport", "omni.isaac.core_nodes.IsaacCreateViewport"),
+                    ("set_active_camera", "omni.graph.ui.SetActiveViewportCamera"),
+                    ("get_prim_path", "omni.graph.nodes.GetPrimPath")
+                ],
+                og.Controller.Keys.SET_VALUES: [
+                    ("OnPlaybackTick.outputs:tick", "PublishClock.inputs:execIn"),
+                    ("Context.outputs:context", "PublishClock.inputs:context"),
+                    ("ReadSimTime.outputs:simulationTime", "PublishClock.inputs:timeStamp"),
+                    ("ros2_camera_helper.inputs:frameId", "base_link"),
+                    ("ros2_camera_helper_02.inputs:frameId", "base_link"),
+                    ("ros2_camera_helper_02.inputs:topicName", "camera_info"),
+                    ("ros2_camera_helper_03.inputs:frameId", "base_link"),
+                    ("ros2_camera_helper_03.inputs:topicName", "depth"),
+                    ("isaac_create_viewport.inputs:viewportId", 1),
+                    ("constant_token.inputs:value", "camera_info")
+                ],
+                og.Controller.Keys.CONNECT: [
+                    ("OnPlaybackTick.outputs:tick", "PublishJointState.inputs:execIn"),
+                    ("OnPlaybackTick.outputs:tick", "SubscribeJointState.inputs:execIn"),
+                    ("OnPlaybackTick.outputs:tick", "isaac_read_lidar_beams_node.inputs:execIn"),
+                    ("OnPlaybackTick.outputs:tick", "isaac_create_viewport.inputs:execIn"),
+                    ("OnPlaybackTick.outputs:tick", "articulation_controller.inputs:execIn"),
+                    ("ReadSimTime.outputs:simulationTime", "PublishJointState.inputs:timeStamp"),
+                    ("ReadSimTime.outputs:simulationTime", "ros2_publish_laser_scan.inputs:timeStamp"),
+                    ("Context.outputs:context", "PublishJointState.inputs:context"),
+                    ("Context.outputs:context", "SubscribeJointState.inputs:context"),
+                    ("Context.outputs:context", "ros2_publish_laser_scan.inputs:context"),
+                    ("Context.outputs:context", "ros2_camera_helper.inputs:context"),
+                    ("Context.outputs:context", "ros2_camera_helper_02.inputs:context"),
+                    ("isaac_create_viewport.outputs:viewport", "ros2_camera_helper.inputs:viewport"),
+                    ("isaac_create_viewport.outputs:viewport", "ros2_camera_helper_02.inputs:viewport"),
+                    ("isaac_create_viewport.outputs:viewport", "set_active_camera.inputs:viewport"),
+                    ("isaac_create_viewport.outputs:execOut", "set_active_camera.inputs:execIn"),
+                    ("set_active_camera.outputs:execOut", "ros2_camera_helper.inputs:execIn"),
+                    ("set_active_camera.outputs:execOut", "ros2_camera_helper_02.inputs:execIn"),
+                    ("get_prim_path.outputs:primPath", "set_active_camera.inputs:primPath"),
+                    ("constant_token.inputs:value", "ros2_camera_helper_02.inputs:type"),
+                ]
+            }
+        )
+        return
+
     async def setup_pre_reset(self):
         return
 
