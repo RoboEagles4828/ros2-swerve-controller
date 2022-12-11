@@ -49,9 +49,9 @@ class VecEnvRLGames(VecEnvBase):
         self, task, backend="numpy", sim_params=None, init_sim=True
     ) -> None:
         super().set_task(task, backend, sim_params, init_sim)
-
         self.num_states = self._task.num_states
         self.state_space = self._task.state_space
+        print("task_set")
 
     def step(self, actions):
         actions = torch.clamp(actions, -self._task.clip_actions, self._task.clip_actions).to(self._task.device).clone()

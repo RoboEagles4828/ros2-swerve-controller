@@ -8,10 +8,17 @@
 				"--symlink-install",
 				"--event-handlers",
 				"--base-paths",
-				"${workspaceFolder}",
+				"/home/nitin/.local/share/ov/pkg/isaac_sim-2022.1.1",
 			],
 			"group": "build",
 			"label": "Colcon: build"
-		}
+		},
+		{
+            "label": "setup_python_env",
+            "type": "shell",
+            "linux": {
+                "command": "export CARB_APP_PATH=/home/nitin/.local/share/ov/pkg/isaac_sim-2022.1.1/kit && export ISAAC_PATH=/home/nitin/.local/share/ov/pkg/isaac_sim-2022.1.1 && export EXP_PATH=/home/nitin/.local/share/ov/pkg/isaac_sim-2022.1.1/apps && source /home/nitin/.local/share/ov/pkg/isaac_sim-2022.1.1/setup_python_env.sh && printenv >${workspaceFolder}/.vscode/.isaac_env.env"
+            }
+        }
 	]
 }

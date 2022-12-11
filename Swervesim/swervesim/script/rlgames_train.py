@@ -103,7 +103,7 @@ def parse_hydra_configs(cfg: DictConfig):
     print_dict(cfg_dict)
 
     task = initialize_task(cfg_dict, env)
-
+    print("task initialized")
     # sets seed. if seed is -1 will pick a random one
     from omni.isaac.core.utils.torch.maths import set_seed
     cfg.seed = set_seed(cfg.seed, torch_deterministic=cfg.torch_deterministic)

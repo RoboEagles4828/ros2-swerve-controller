@@ -149,13 +149,13 @@ class SwerveTask(RLTask):
         color = torch.tensor([1, 0, 0])
         ball = DynamicSphere(
             prim_path=self.default_zero_env_path + "/ball", 
-            translation=self._ball_position, 
+            #translation=self._ball_position, 
             name="target_0",
             radius=radius,
             color=color,
         )
-        self._sim_config.apply_articulation_settings("ball", get_prim_at_path(ball.prim_path), self._sim_config.parse_actor_config("ball"))
-        ball.set_collision_enabled(False)
+        #self._sim_config.apply_articulation_settings("ball", get_prim_at_path(ball.prim_path), self._sim_config.parse_actor_config("ball"))
+        #ball.set_collision_enabled(False)
     def get_observations(self) -> dict:
         print("line 156")
         torso_position, torso_rotation = self._swerve.get_world_poses(clone=False)
