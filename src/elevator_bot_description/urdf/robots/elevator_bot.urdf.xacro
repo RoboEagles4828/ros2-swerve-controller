@@ -9,9 +9,9 @@
     <xacro:include filename="$(find elevator_bot_description)/urdf/util/materials.xacro" />
 
     <!-- Parts of the robot -->
-    <!-- <xacro:base_stage prefix="elevator_bot" /> -->
-    <xacro:second_stage prefix="elevator_bot"/>
-    <!-- <xacro:carriage_stage /> -->
+    <xacro:base_stage prefix="elevator_bot" /> 
+    <xacro:second_stage prefix="elevator_bot" parent="base_stage"/>
+    <xacro:carriage_stage prefix="elevator_bot" parent="second_stage"/>
     
     
 </robot>
