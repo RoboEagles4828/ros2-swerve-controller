@@ -46,12 +46,12 @@ from pxr import PhysxSchema
 class Swerve(Robot):
     def __init__(self,prim_path,name,translation):
         self._name = name
-
+        #self.prim_path = prim_path
         file_path = os.path.abspath(__file__)
         project_root_path = os.path.abspath(os.path.join(file_path, "../../../../../"))
-        root_path= os.path.join(project_root_path, "src/swerve_description/swerve3.usd")
-        
+        root_path= os.path.join(project_root_path, "src/swerve_description/swerve.usd")
         print(str(root_path))
+        print(prim_path)
         self._usd_path = root_path 
         add_reference_to_stage(self._usd_path, prim_path)
         print(str(get_current_stage() ))

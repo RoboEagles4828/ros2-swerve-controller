@@ -104,30 +104,32 @@ class SwerveTask(RLTask):
         return
 
     def set_up_scene(self, scene) -> None:
-        self.get_target()
         self.get_swerve()
+        self.get_target()
         super().set_up_scene(scene)
         self._swerve = SwerveView(prim_paths_expr="/World/envs/.*/swerve", name="swerveview")
         scene.add(self._swerve)
         scene.add(self._swerve._axle)
         scene.add(self._swerve._wheel)
         scene.add(self._swerve._base)
+        print("scene set up")
 
         return
 
     def get_swerve(self):
         swerve = Swerve(self.default_zero_env_path + "/swerve", "swerve", self._swerve_translation)
+        print("Line:120")
         self._sim_config.apply_articulation_settings("swerve", get_prim_at_path(swerve.prim_path), self._sim_config.parse_actor_config("swerve"))
-
+        print("Line:122")
         # Configure joint properties
-        joint_paths = ["front_left_axle_joint",
-                           "front_right_axle_joint",
-                           "back_left_axle_joint",
-                           "back_right_axle_joint",
-                           "front_left_wheel_joint",
-                           "front_right_wheel_joint",
-                           "back_left_wheel_joint",
-                           "back_right_wheel_joint",
+        joint_paths = ["front_left_axle_link",
+                           "front_right_axle_link",
+                           "back_left_axle_link",
+                           "back_right_axle_link",
+                           "front_left_wheel_link",
+                           "front_right_wheel_link",
+                           "back_left_wheel_link",
+                           "back_right_wheel_link",
                         ]
         # for quadrant in ["LF", "LH", "RF", "RH"]:
         #     for component, abbrev in [("HIP", "H"), ("THIGH", "K")]:
@@ -136,25 +138,26 @@ class SwerveTask(RLTask):
         
         for joint_path in joint_paths:
             if("wheel" in joint_path):
+                print("set_wheel")
                 set_drive(f"{swerve.prim_path}/{joint_path}", "angular", "velocity", 0, 400, 40, 1000)
             if("axle" in joint_path):
+                print("set_axle")
                 set_drive(f"{swerve.prim_path}/{joint_path}", "angular", "position", 0, 400, 40, 1000)
 
-        self.default_dof_pos = torch.zeros((self.num_envs, 12), dtype=torch.float, device=self.device, requires_grad=False)
-        dof_names = swerve.dof_names
-        for i in range(self.num_actions):
-            name = dof_names[i]
-            angle = self.named_default_joint_angles[name]
-            self.default_dof_pos[:, i] = angle
     def get_target(self):
-        radius = 0.05
+        radius = 0.1
         color = torch.tensor([1, 0, 0])
         ball = DynamicSphere(
             prim_path=self.default_zero_env_path + "/ball", 
+            translation=self._ball_position, 
             name="target_0",
             radius=radius,
-            color=color,)
+            color=color,
+        )
+        self._sim_config.apply_articulation_settings("ball", get_prim_at_path(ball.prim_path), self._sim_config.parse_actor_config("ball"))
+        ball.set_collision_enabled(False)
     def get_observations(self) -> dict:
+        print("line 156")
         torso_position, torso_rotation = self._swerve.get_world_poses(clone=False)
         root_velocities = self._swerve.get_velocities(clone=False)
         dof_pos = self._swerve.get_joint_positions(clone=False)
@@ -193,9 +196,11 @@ class SwerveTask(RLTask):
                 "obs_buf": self.obs_buf
             }
         }
+        print("line 195")
         return observations
 
     def pre_physics_step(self, actions) -> None:
+        print("line 199")
         reset_env_ids = self.reset_buf.nonzero(as_tuple=False).squeeze(-1)
         if len(reset_env_ids) > 0:
             self.reset_idx(reset_env_ids)
@@ -205,8 +210,9 @@ class SwerveTask(RLTask):
         current_targets = self.current_targets + self.action_scale * self.actions * self.dt 
         self.current_targets[:] = torch.clamp(current_targets, self.swerve_dof_lower_limits, self.swerve_dof_upper_limits)
         self._swerve.set_joint_position_targets(self.current_targets, indices)
-
+        print("line 209")
     def reset_idx(self, env_ids):
+        print("line 211")
         num_resets = len(env_ids)
         # randomize DOF velocities
         velocities = torch_rand_float(-0.1, 0.1, (num_resets, self._swerve.num_dof), device=self._device)
@@ -240,8 +246,9 @@ class SwerveTask(RLTask):
         self.progress_buf[env_ids] = 0
         self.last_actions[env_ids] = 0.
         self.last_dof_vel[env_ids] = 0.
-
+        print("line 245")
     def post_reset(self):
+        print("line 247")
         self.initial_root_pos, self.initial_root_rot = self._swerve.get_world_poses()
         self.current_targets = self.default_dof_pos.clone()
 
@@ -270,7 +277,7 @@ class SwerveTask(RLTask):
         # randomize all envs
         indices = torch.arange(self._swerve.count, dtype=torch.int64, device=self._device)
         self.reset_idx(indices)
-
+        print("line 276")
     def calculate_metrics(self) -> None:
         torso_position, torso_rotation = self._swerve.get_world_poses(clone=False)
         root_velocities = self._swerve.get_velocities(clone=False)
@@ -303,10 +310,11 @@ class SwerveTask(RLTask):
         self.fallen_over = self._swerve.is_base_below_threshold(threshold=0.51, ground_heights=0.0)
         total_reward[torch.nonzero(self.fallen_over)] = -1
         self.rew_buf[:] = total_reward.detach()
-
+        print("line 309")
 
     def is_done(self) -> None:
+        print("line 312")
         # reset agents
         time_out = self.progress_buf >= self.max_episode_length - 1
         self.reset_buf[:] = time_out | self.fallen_over
-
+        print("line 316")

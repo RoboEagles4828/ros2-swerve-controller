@@ -54,7 +54,6 @@ class ImportBot(BaseSample):
         return
     
     def import_robot(self, urdf_path):
-        world = self.get_world()
         import_config = _urdf.ImportConfig()
         import_config.merge_fixed_joints = False
         import_config.fix_base = False
