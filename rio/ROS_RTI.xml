@@ -11,15 +11,8 @@ This code contains trade secrets of Real-Time Innovations, Inc.
 
     <!-- Qos Library -->
     <qos_library name="ROS2_QOS">
-        <qos_profile name="Default"
-                     base_name="BuiltinQosLib::Generic.StrictReliable"
-                     is_default_qos="true">
-            <domain_participant_qos>
-                <participant_name>
-                    <name>ROS to RTI Connector</name>
-                </participant_name>
-            </domain_participant_qos>
-        </qos_profile>
+        <qos_profile name="Default" base_name="BuiltinQosSnippetLib::QosPolicy.Reliability.BestEffort" is_default_qos="true">
+      </qos_profile>
     </qos_library>
 
     <!-- types -->
@@ -28,8 +21,8 @@ This code contains trade secrets of Real-Time Innovations, Inc.
         <module name="msg">
           <module name="dds_">
             <struct name="joystick">
-              <member name="axes" type="float32" sequenceMaxLength="-1"/>
-              <member name="buttons" type="long" sequenceMaxLength="-1"/>
+              <member name="axes" type="float32" sequenceMaxLength="4"/>
+              <member name="buttons" type="long" sequenceMaxLength="4"/>
             </struct>
           </module>
         </module>
@@ -38,24 +31,33 @@ This code contains trade secrets of Real-Time Innovations, Inc.
 
     <!-- Domain Library -->
     <domain_library name="ROS2_DOMAIN_LIB">
-        <domain name="ROS2_DOMAIN" domain_id="4828">
-            <register_type name="sensor_msgs::msg::dds_::joystick" type_ref="sensor::msg::dds_::joystick" />
-            <topic name="rt/joystick_data" register_type_ref="sensor::msg::dds_::joystick"/>
+        <domain name="ROS2_DOMAIN" domain_id="1">
+            <register_type name="sensor_msgs::msg::dds_::joystick" type_ref="sensor_msgs::msg::dds_::joystick" />
+            <topic name="rt/joystick_data" register_type_ref="sensor_msgs::msg::dds_::joystick"/>
         </domain>
     </domain_library>
 
-    <!-- Participant library -->
-    <domain_participant_library name="ROS2_PARTICPANT_LIB">
+    <!-- <domain_participant_library name="ROS2_PARTICIPANT_LIB">
         <domain_participant name="publisher" domain_ref="ROS2_DOMAIN_LIB:ROS2_DOMAIN">
             <publisher name="joystick_data_publisher">
                 <data_writer name="joystick_data_writer" topic_ref="rt/joystick_data" />
             </publisher>
-        </domain_participant>
+        </domain_participant> -->
 
-        <domain_participant name="subscriber" domain_ref="ROS2_DOMAIN_LIB::ROS2_DOMAIN">
-            <subscriber name="rio_data_subscriber">
-                <data_reader name="rio_data_reader" topic_ref="rt/rio_to_orin" />
-            </subscriber>
-        </domain_participant>
+    <!-- Participant library -->
+    <domain_participant_library name="ROS2_PARTICIPANT_LIB">
+
+      <domain_participant name="publisher" domain_ref="ROS2_DOMAIN_LIB::ROS2_DOMAIN">
+        <publisher name="joystick_data_publisher">
+          <data_writer name="joystick_data_writer" topic_ref="rt/joystick_data"/>
+        </publisher>
+      </domain_participant>
+
+      <domain_participant name="subscriber" domain_ref="ROS2_DOMAIN_LIB::ROS2_DOMAIN">
+        <subscriber name="rio_data_subscriber">
+            <data_reader name="rio_data_reader" topic_ref="rt/joystick_data" />
+        </subscriber>
+      </domain_participant>
+
     </domain_participant_library>
 </dds>

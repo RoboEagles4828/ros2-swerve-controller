@@ -1,5 +1,5 @@
 import wpilib
-from RTI_Node import RTI_Node as rti
+import RTI
 
 class TestRobot(wpilib.TimedRobot):
     def robotInit(self) -> None:
@@ -7,7 +7,7 @@ class TestRobot(wpilib.TimedRobot):
         self.controller = wpilib.XboxController(0)
         self.axes = []
         self.buttons = []
-        self.writer = rti()
+        self.writer = RTI.RTI_Node()
 
     def teleopInit(self) -> None:
         print("Initialized")
