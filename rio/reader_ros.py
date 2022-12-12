@@ -10,15 +10,14 @@ class OrinSubscriber(Node):
 
         qos_profile = qos.QoSProfile(depth=1,reliability=qos.ReliabilityPolicy.BEST_EFFORT, durability=qos.DurabilityPolicy.VOLATILE)
 
-        self.subscription = self.create_subscription(Joy, ' rt/joystick_data', self.listener_callback, qos_profile)
+        self.subscription = self.create_subscription(Joy, 'joystick_data', self.listener_callback, qos_profile)
 
     def listener_callback(self, msg):
         self.get_logger().info('Recieved: "%s"' % msg.data)
 
 def main(args=None):
     print('Init')
-    context = rclpy.get_default_context().init()
-    rclpy.init(args=args, domain_id=1)
+    rclpy.init(args=args)
 
     orin_subscriber = OrinSubscriber()
 
