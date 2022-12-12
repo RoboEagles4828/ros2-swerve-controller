@@ -6,8 +6,8 @@ with rti.open_connector(config_name="ROS2_PARTICIPANT_LIB::publisher",
 
     output = connector.get_output("joystick_data_publisher::joystick_data_writer")
 
-    # print("Waiting for subscriptions...")
-    # output.wait_for_subscriptions()
+    print("Waiting for subscriptions...")
+    output.wait_for_subscriptions()
 
     axes = [1, 2, 3, 4]
     buttons = [4, 3, 2, 1]

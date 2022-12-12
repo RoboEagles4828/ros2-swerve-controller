@@ -17,12 +17,14 @@ This code contains trade secrets of Real-Time Innovations, Inc.
 
     <!-- types -->
     <types>
+      <include file="Header.xml"/>
       <module name="sensor_msgs">
         <module name="msg">
           <module name="dds_">
-            <struct name="joystick">
-              <member name="axes" type="float32" sequenceMaxLength="4"/>
-              <member name="buttons" type="long" sequenceMaxLength="4"/>
+            <struct name="Joy">
+              <member name="header" type= "nonBasic" nonBasicTypeName="std_msgs::msg::Header"/>
+              <member name="axes" type="float32" sequenceMaxLength="100"/>
+              <member name="buttons" type="int32" sequenceMaxLength="100"/>
             </struct>
           </module>
         </module>
@@ -32,8 +34,8 @@ This code contains trade secrets of Real-Time Innovations, Inc.
     <!-- Domain Library -->
     <domain_library name="ROS2_DOMAIN_LIB">
         <domain name="ROS2_DOMAIN" domain_id="1">
-            <register_type name="sensor_msgs::msg::dds_::joystick" type_ref="sensor_msgs::msg::dds_::joystick" />
-            <topic name="rt/joystick_data" register_type_ref="sensor_msgs::msg::dds_::joystick"/>
+            <register_type name="sensor_msgs::msg::dds_::Joy" type_ref="sensor_msgs::msg::dds_::Joy" />
+            <topic name="rt/joystick_data" register_type_ref="sensor_msgs::msg::dds_::Joy"/>
         </domain>
     </domain_library>
 

@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<dds xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="file:////home/saranga/rti_connext_dds-6.1.1/bin/../resource/app/app_support/rtiddsgen/schema/rti_dds_profiles.xsd">
+<types>
+<include file="Time.xml"/>
+<module name="std_msgs">
+  <module name="msg">
+    <struct name= "Header">
+      <member name="stamp" type="nonBasic"  nonBasicTypeName= "std_msgs::msg::Time"/>
+      <member name="frame_id" stringMaxLength="255" type="string"/>
+    </struct>
+  </module>
+</module>
+</types>
+</dds>

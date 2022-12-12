@@ -17,7 +17,8 @@ class OrinSubscriber(Node):
 
 def main(args=None):
     print('Init')
-    rclpy.init(args=args)
+    context = rclpy.get_default_context().init()
+    rclpy.init(args=args, domain_id=1)
 
     orin_subscriber = OrinSubscriber()
 
