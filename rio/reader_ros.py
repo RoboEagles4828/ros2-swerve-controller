@@ -8,9 +8,10 @@ class OrinSubscriber(Node):
     def __init__(self):
         super().__init__('orin_subscriber')
 
-        qos_profile = qos.QoSProfile(depth=1,reliability=qos.ReliabilityPolicy.BEST_EFFORT, durability=qos.DurabilityPolicy.VOLATILE)
+        qos_profile = qos.QoSProfile(depth=1, reliability=qos.ReliabilityPolicy.BEST_EFFORT, durability=qos.DurabilityPolicy.VOLATILE)
+        qos_profile_2 = qos.QoSProfile(depth=1, reliability=qos.ReliabilityPolicy.SYSTEM_DEFAULT, durability=qos.DurabilityPolicy.SYSTEM_DEFAULT)
 
-        self.subscription = self.create_subscription(Joy, 'joystick_data', self.listener_callback, qos_profile)
+        self.subscription = self.create_subscription(Joy, r'joystick_data', self.listener_callback, qos_profile_2)
 
     def listener_callback(self, msg):
         self.get_logger().info('Recieved: "%s"' % msg.data)
