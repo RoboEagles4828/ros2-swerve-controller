@@ -21,7 +21,7 @@ This code contains trade secrets of Real-Time Innovations, Inc.
       <module name="sensor_msgs">
         <module name="msg">
           <module name="dds_">
-            <struct name="Joy">
+            <struct name="Joy_">
               <member name="header" type= "nonBasic" nonBasicTypeName="std_msgs::msg::Header"/>
               <member name="axes" type="float32" sequenceMaxLength="100"/>
               <member name="buttons" type="int32" sequenceMaxLength="100"/>
@@ -33,16 +33,16 @@ This code contains trade secrets of Real-Time Innovations, Inc.
 
     <!-- Domain Library -->
     <domain_library name="ROS2_DOMAIN_LIB">
-        <domain name="ROS2_DOMAIN" domain_id="1">
-            <register_type name="sensor_msgs::msg::dds_::Joy" type_ref="sensor_msgs::msg::dds_::Joy" />
-            <topic name="rt/joystick_data" register_type_ref="sensor_msgs::msg::dds_::Joy"/>
+        <domain name="ROS2_DOMAIN" domain_id="0">
+            <register_type name="sensor_msgs::msg::dds_::Joy_" type_ref="sensor_msgs::msg::dds_::Joy_" />
+            <topic name="rt/joystick_data" register_type_ref="sensor_msgs::msg::dds_::Joy_"/>
         </domain>
     </domain_library>
 
     <!-- <domain_participant_library name="ROS2_PARTICIPANT_LIB">
         <domain_participant name="publisher" domain_ref="ROS2_DOMAIN_LIB:ROS2_DOMAIN">
-            <publisher name="joystick_data_publisher">
-                <data_writer name="joystick_data_writer" topic_ref="rt/joystick_data" />
+            <publisher name="Joy_stick_data_publisher">
+                <data_writer name="Joy_stick_data_writer" topic_ref="rt/Joy_stick_data" />
             </publisher>
         </domain_participant> -->
 

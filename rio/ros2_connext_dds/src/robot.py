@@ -13,9 +13,10 @@ class TestRobot(wpilib.TimedRobot):
         print("Initialized")
 
     def teleopPeriodic(self) -> None:
-        self.axes = [self.controller.getLeftX(), self.controller.getLeftY(), self.controller.getRightX(), self.controller.getRightY()]
-        self.buttons = [self.controller.getAButton(), self.controller.getBButton(), self.controller.getXButton(), self.controller.getYButton()]
-        self.writer.sendData(self.axes, self.buttons)
+        axes = [self.controller.getLeftX(), self.controller.getLeftY(), self.controller.getRightX(), self.controller.getRightY()]
+        buttons = [self.controller.getAButton(), self.controller.getBButton(), self.controller.getXButton(), self.controller.getYButton()]
+        self.buttons = [int(i) for i in buttons]
+        self.writer.sendData(axes, buttons)
         print("Setting data: " + self.axes + " " + self.buttons)
 
 if __name__ == '__main__':

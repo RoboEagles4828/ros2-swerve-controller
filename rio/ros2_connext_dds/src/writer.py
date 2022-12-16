@@ -1,6 +1,5 @@
 import rticonnextdds_connector as rti
 from time import sleep
-import cv2
 
 with rti.open_connector(config_name="ROS2_PARTICIPANT_LIB::publisher",
         url="./ROS_RTI.xml") as connector:
