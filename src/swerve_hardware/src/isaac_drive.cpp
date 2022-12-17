@@ -63,8 +63,8 @@ CallbackReturn IsaacDriveHardware::on_init(const hardware_interface::HardwareInf
 
   hw_positions_.resize(info_.joints.size(), std::numeric_limits<double>::quiet_NaN());
   hw_velocities_.resize(info_.joints.size(), std::numeric_limits<double>::quiet_NaN());
-  hw_command_velocity_.resize(info_.joints.size()/2, std::numeric_limits<double>::quiet_NaN());
-  hw_command_position_.resize(info_.joints.size()/2, std::numeric_limits<double>::quiet_NaN());
+  hw_command_velocity_.resize(info_.joints.size(), std::numeric_limits<double>::quiet_NaN());
+  // hw_command_position_.resize(info_.joints.size()/2, std::numeric_limits<double>::quiet_NaN());
 
 
   for (const hardware_interface::ComponentInfo & joint : info_.joints)
@@ -183,8 +183,8 @@ CallbackReturn IsaacDriveHardware::on_activate(
   // Set Default Values for Command Interface Arrays
   for (auto i = 0u; i < hw_command_velocity_.size(); i++)
   {
-    hw_command_velocity_[i] = NULL;
-    hw_command_position_[i] = NULL;
+    hw_command_velocity_[i] = 0;
+    hw_command_position_[i] = 0;
   }
 
   subscriber_is_active_ = true;
@@ -255,15 +255,15 @@ hardware_interface::return_type swerve_hardware::IsaacDriveHardware::write()
   rclcpp::spin_some(node_);
 
   // Publish Position
-  if (realtime_isaac_publisher_->trylock()) {
-    auto & realtime_isaac_command_ = realtime_isaac_publisher_->msg_;
-    realtime_isaac_command_.header.stamp = node_->get_clock()->now();
-    realtime_isaac_command_.name = joint_names_position_;
-    realtime_isaac_command_.velocity = empty_;
-    realtime_isaac_command_.position = hw_command_position_;
-    realtime_isaac_publisher_->unlockAndPublish();
-  }
-  rclcpp::spin_some(node_);
+  // if (realtime_isaac_publisher_->trylock()) {
+  //   auto & realtime_isaac_command_ = realtime_isaac_publisher_->msg_;
+  //   realtime_isaac_command_.header.stamp = node_->get_clock()->now();
+  //   realtime_isaac_command_.name = joint_names_position_;
+  //   realtime_isaac_command_.velocity = empty_;
+  //   realtime_isaac_command_.position = hw_command_position_;
+  //   realtime_isaac_publisher_->unlockAndPublish();
+  // }
+  // rclcpp::spin_some(node_);
 
   return hardware_interface::return_type::OK;
 }

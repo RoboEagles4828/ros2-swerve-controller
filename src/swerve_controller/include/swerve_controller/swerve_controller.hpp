@@ -57,16 +57,18 @@ class Axle {
     // Axle(std::reference_wrapper<hardware_interface::LoanedCommandInterface> cmd_position_, 
     //           std::reference_wrapper<const hardware_interface::LoanedStateInterface> state_position_,
     //           std::string name);
-    Axle(std::reference_wrapper<hardware_interface::LoanedCommandInterface> position,
+    Axle(std::reference_wrapper<hardware_interface::LoanedCommandInterface> velocity_,std::reference_wrapper< const hardware_interface::LoanedStateInterface> position,
                          std::string name);
-    void set_position(double position);
+    void set_velocity(double velocity_);
     double get_position (void);
 
   private:
     // std::reference_wrapper<hardware_interface::LoanedCommandInterface> cmd_position_;
     // std::reference_wrapper<const hardware_interface::LoanedStateInterface> state_position_;
     // std::string name;
-    std::reference_wrapper<hardware_interface::LoanedCommandInterface> position_;
+    std::reference_wrapper<hardware_interface::LoanedCommandInterface> velocity_;
+    std::reference_wrapper<const hardware_interface::LoanedStateInterface> position_;
+ 
     std::string name;
 
 };

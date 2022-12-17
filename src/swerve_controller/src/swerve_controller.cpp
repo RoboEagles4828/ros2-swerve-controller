@@ -44,19 +44,17 @@ using hardware_interface::HW_IF_POSITION;
 using hardware_interface::HW_IF_VELOCITY;
 using lifecycle_msgs::msg::State;
 
-Wheel::Wheel(std::reference_wrapper<hardware_interface::LoanedCommandInterface> velocity,
-                         std::string name) : velocity_(velocity), name(std::move(name)) {}
+Wheel::Wheel(std::reference_wrapper<hardware_interface::LoanedCommandInterface> velocity,std::string name) : velocity_(velocity), name(std::move(name)) {}
 
 void Wheel::set_velocity(double velocity)
 {
   velocity_.get().set_value(velocity);
 }
-Axle::Axle(std::reference_wrapper<hardware_interface::LoanedCommandInterface> position,
-                         std::string name) : position_(position), name(std::move(name)) {}
+Axle::Axle(std::reference_wrapper<hardware_interface::LoanedCommandInterface> velocity,std::reference_wrapper< const hardware_interface::LoanedStateInterface> position, std::string name) : position_(position), velocity_(velocity), name(std::move(name)) {}
 
-void Axle::set_position(double position)
+void Axle::set_velocity(double velocity)
 {
-  position_.get().set_value(position);
+  velocity_.get().set_value(velocity);
 }
 double Axle::get_position(void) 
 {
@@ -103,10 +101,10 @@ InterfaceConfiguration SwerveController::command_interface_configuration() const
   conf_names.push_back(front_right_wheel_joint_name_ + "/" + HW_IF_VELOCITY);
   conf_names.push_back(rear_left_wheel_joint_name_ + "/" + HW_IF_VELOCITY);
   conf_names.push_back(rear_right_wheel_joint_name_ + "/" + HW_IF_VELOCITY);
-  conf_names.push_back(front_left_axle_joint_name_ + "/" + HW_IF_POSITION);
-  conf_names.push_back(front_right_axle_joint_name_ + "/" + HW_IF_POSITION);
-  conf_names.push_back(rear_left_axle_joint_name_ + "/" + HW_IF_POSITION);
-  conf_names.push_back(rear_right_axle_joint_name_ + "/" + HW_IF_POSITION);
+  conf_names.push_back(front_left_axle_joint_name_ + "/" + HW_IF_VELOCITY);
+  conf_names.push_back(front_right_axle_joint_name_ + "/" + HW_IF_VELOCITY);
+  conf_names.push_back(rear_left_axle_joint_name_ + "/" + HW_IF_VELOCITY);
+  conf_names.push_back(rear_right_axle_joint_name_ + "/" + HW_IF_VELOCITY);
   return {interface_configuration_type::INDIVIDUAL, conf_names};
 }
 
@@ -172,7 +170,7 @@ controller_interface::return_type SwerveController::update(
 
 
 
-  //gte current wheel positions
+  //get current wheel positions
   const double front_left_current_pos = front_left_handle_2_->get_position();
   const double front_right_current_pos = front_right_handle_2_->get_position();
   const double rear_left_current_pos = rear_left_handle_2_->get_position();
@@ -255,12 +253,54 @@ controller_interface::return_type SwerveController::update(
   rear_right_handle_->set_velocity(rear_right_velocity);
 
    // Set Wheel Positions
-   //remmeber to comment thi back in! 
-  front_left_handle_2_->set_position(front_left_position);
-  front_right_handle_2_->set_position(front_right_position);
-  rear_left_handle_2_->set_position(rear_left_position);
-  rear_right_handle_2_->set_position(rear_right_position);
-  //remmeber to comment thi back in!
+   //remmeber to comment this back in!
+   //Has a 1 degree tolerance. Turns clockwise if less than, counter clockwise if greater than
+  if(front_left_current_pos>front_left_position+M_PI/180||front_left_current_pos<front_left_position-M_PI/180){
+    if(front_left_position>front_left_current_pos){
+    front_left_handle_2_->set_velocity(5.0);
+    }
+    else{
+      front_left_handle_2_->set_velocity(-5.0);
+    } 
+  }
+  else{
+    front_left_handle_2_->set_velocity(0.0);
+  }
+  if(front_right_current_pos>front_right_position+M_PI/180||front_right_current_pos<front_right_position-M_PI/180){
+    if(front_right_position>front_right_current_pos){
+      front_right_handle_2_->set_velocity(5.0);
+    }
+    else{
+      front_right_handle_2_->set_velocity(-5.0);
+    } 
+  }
+  else{
+    front_left_handle_2_->set_velocity(0.0);
+  }
+  if(rear_left_current_pos>rear_left_position+M_PI/180||rear_left_current_pos<rear_left_position-M_PI/180){
+    if(rear_left_position>rear_left_current_pos){
+      rear_left_handle_2_->set_velocity(5.0);
+    }
+    else{
+      rear_left_handle_2_->set_velocity(-5.0);
+    } 
+  }
+  else{
+    front_left_handle_2_->set_velocity(0.0);
+  }
+  if(rear_right_current_pos>rear_right_position+M_PI/180||rear_right_current_pos<rear_right_position-M_PI/180){
+    if(rear_right_position>rear_right_current_pos){
+      rear_right_handle_2_->set_velocity(5.0);
+    }
+    else{
+      rear_right_handle_2_->set_velocity(-5.0);
+    } 
+  }
+  else{
+    front_left_handle_2_->set_velocity(0.0);
+  }
+  
+  //remmeber to comment this back in!
 
   //test TEMPORARY!
   //front_left_handle_2_->set_position(M_PI * 2.5);
@@ -494,7 +534,7 @@ std::shared_ptr<Axle> SwerveController::get_axle( const std::string & axle_name 
   auto logger = node_->get_logger();
   if (axle_name.empty())
   {
-    RCLCPP_ERROR(logger, "Wheel joint name not given. Make sure all joints are specified.");
+    RCLCPP_ERROR(logger, "Axle joint name not given. Make sure all joints are specified.");
     return nullptr;
   }
 
@@ -503,15 +543,26 @@ std::shared_ptr<Axle> SwerveController::get_axle( const std::string & axle_name 
     command_interfaces_.begin(), command_interfaces_.end(),
     [&axle_name](const auto & interface) {
       return interface.get_name() == axle_name &&
-              interface.get_interface_name() == HW_IF_POSITION;
+              interface.get_interface_name() == HW_IF_VELOCITY;
     });
+  const auto state_handle = std::find_if(
+    state_interfaces_.cbegin(), state_interfaces_.cend(),
+    [&axle_name](const auto & interface){
+        return interface.get_name() == axle_name &&
+               interface.get_interface_name() == HW_IF_POSITION;
+      });
 
   if (command_handle == command_interfaces_.end())
   {
     RCLCPP_ERROR(logger, "Unable to obtain joint command handle for %s", axle_name.c_str());
     return nullptr;
   }
-  return std::make_shared<Axle>(std::ref(*command_handle), axle_name);
+  if (state_handle == state_interfaces_.cend())
+  {
+    RCLCPP_ERROR(logger, "Unable to obtain joint state handle for %s", axle_name.c_str());
+    return nullptr;
+  }
+  return std::make_shared<Axle>(std::ref(*command_handle),std::ref(*state_handle), axle_name);
 }
 }  // namespace swerve_controller
 
