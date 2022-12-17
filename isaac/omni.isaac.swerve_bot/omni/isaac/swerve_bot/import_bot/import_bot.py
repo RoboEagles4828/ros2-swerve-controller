@@ -5,7 +5,7 @@ from omni.isaac.urdf import _urdf
 from omni.isaac.core.robots import Robot
 from omni.isaac.core.utils import prims
 from omni.isaac.core_nodes.scripts.utils import set_target_prims
-from omni.kit.viewport_legacy import get_default_viewport_window
+from omni.kit.viewport.utility import get_active_viewport
 from pxr import UsdPhysics
 import omni.kit.commands
 import os
@@ -176,7 +176,7 @@ class ImportBot(BaseSample):
     
     def setup_perspective_cam(self):
         # Get the Viewport and the Default Camera
-        viewport_window = get_default_viewport_window()
+        viewport_window = get_active_viewport()
         camera = self.get_world().stage.GetPrimAtPath(viewport_window.get_active_camera())
 
         # Get Default Cam Values
