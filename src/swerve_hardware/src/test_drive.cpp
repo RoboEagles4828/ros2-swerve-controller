@@ -26,13 +26,13 @@ using std::placeholders::_1;
 
 namespace swerve_hardware
 {
-CallbackReturn TestDriveHardware::on_init(const hardware_interface::HardwareInfo & info)
+hardware_interface::CallbackReturn TestDriveHardware::on_init(const hardware_interface::HardwareInfo & info)
 {
 
   // INTERFACE SETUP
-  if (hardware_interface::SystemInterface::on_init(info) != CallbackReturn::SUCCESS)
+  if (hardware_interface::SystemInterface::on_init(info) != hardware_interface::CallbackReturn::SUCCESS)
   {
-    return CallbackReturn::ERROR;
+    return hardware_interface::CallbackReturn::ERROR;
   }
 
   // 8 positions states, 4 axle positions 4 wheel positions
@@ -55,7 +55,7 @@ CallbackReturn TestDriveHardware::on_init(const hardware_interface::HardwareInfo
         rclcpp::get_logger("TestDriveHardware"),
         "Joint '%s' has %zu command interfaces found. 1 expected.", joint.name.c_str(),
         joint.command_interfaces.size());
-      return CallbackReturn::ERROR;
+      return hardware_interface::CallbackReturn::ERROR;
     }
 
     if (joint.command_interfaces[0].name != hardware_interface::HW_IF_VELOCITY && joint.command_interfaces[0].name != hardware_interface::HW_IF_POSITION)
@@ -64,7 +64,7 @@ CallbackReturn TestDriveHardware::on_init(const hardware_interface::HardwareInfo
         rclcpp::get_logger("TestDriveHardware"),
         "Joint '%s' have %s command interfaces found. '%s' expected.", joint.name.c_str(),
         joint.command_interfaces[0].name.c_str(), hardware_interface::HW_IF_VELOCITY);
-      return CallbackReturn::ERROR;
+      return hardware_interface::CallbackReturn::ERROR;
     }
 
     if (joint.state_interfaces.size() != 2)
@@ -73,7 +73,7 @@ CallbackReturn TestDriveHardware::on_init(const hardware_interface::HardwareInfo
         rclcpp::get_logger("TestDriveHardware"),
         "Joint '%s' has %zu state interface. 2 expected.", joint.name.c_str(),
         joint.state_interfaces.size());
-      return CallbackReturn::ERROR;
+      return hardware_interface::CallbackReturn::ERROR;
     }
 
     if (joint.state_interfaces[0].name != hardware_interface::HW_IF_POSITION)
@@ -82,7 +82,7 @@ CallbackReturn TestDriveHardware::on_init(const hardware_interface::HardwareInfo
         rclcpp::get_logger("TestDriveHardware"),
         "Joint '%s' have '%s' as first state interface. '%s' expected.", joint.name.c_str(),
         joint.state_interfaces[0].name.c_str(), hardware_interface::HW_IF_POSITION);
-      return CallbackReturn::ERROR;
+      return hardware_interface::CallbackReturn::ERROR;
     }
 
     if (joint.state_interfaces[1].name != hardware_interface::HW_IF_VELOCITY)
@@ -91,11 +91,11 @@ CallbackReturn TestDriveHardware::on_init(const hardware_interface::HardwareInfo
         rclcpp::get_logger("TestDriveHardware"),
         "Joint '%s' have '%s' as second state interface. '%s' expected.", joint.name.c_str(),
         joint.state_interfaces[1].name.c_str(), hardware_interface::HW_IF_VELOCITY);
-      return CallbackReturn::ERROR;
+      return hardware_interface::CallbackReturn::ERROR;
     }
   }
 
-  return CallbackReturn::SUCCESS;
+  return hardware_interface::CallbackReturn::SUCCESS;
 }
 
 
@@ -149,7 +149,7 @@ std::vector<hardware_interface::CommandInterface> TestDriveHardware::export_comm
 
 
 
-CallbackReturn TestDriveHardware::on_activate(
+hardware_interface::CallbackReturn TestDriveHardware::on_activate(
   const rclcpp_lifecycle::State & /*previous_state*/)
 {
   RCLCPP_INFO(rclcpp::get_logger("TestDriveHardware"), "Activating ...please wait...");
@@ -170,25 +170,25 @@ CallbackReturn TestDriveHardware::on_activate(
 
   RCLCPP_INFO(rclcpp::get_logger("TestDriveHardware"), "Successfully activated!");
 
-  return CallbackReturn::SUCCESS;
+  return hardware_interface::CallbackReturn::SUCCESS;
 }
 
 
 
-CallbackReturn TestDriveHardware::on_deactivate(
+hardware_interface::CallbackReturn TestDriveHardware::on_deactivate(
   const rclcpp_lifecycle::State & /*previous_state*/)
 {
   RCLCPP_INFO(rclcpp::get_logger("TestDriveHardware"), "Deactivating ...please wait...");
   RCLCPP_INFO(rclcpp::get_logger("TestDriveHardware"), "Successfully deactivated!");
 
-  return CallbackReturn::SUCCESS;
+  return hardware_interface::CallbackReturn::SUCCESS;
 }
 
 
 // ||                        ||
 // \/ THE STUFF THAT MATTERS \/
 
-hardware_interface::return_type TestDriveHardware::read()
+hardware_interface::return_type TestDriveHardware::read(const rclcpp::Time & time, const rclcpp::Duration & period)
 {
 
   // Dumb Pass Through
@@ -223,7 +223,7 @@ hardware_interface::return_type TestDriveHardware::read()
 
 
 
-hardware_interface::return_type swerve_hardware::TestDriveHardware::write()
+hardware_interface::return_type swerve_hardware::TestDriveHardware::write(const rclcpp::Time & time, const rclcpp::Duration & period)
 {
   // Do Nothing
   // Uncomment below if you want verbose messages for debugging.
