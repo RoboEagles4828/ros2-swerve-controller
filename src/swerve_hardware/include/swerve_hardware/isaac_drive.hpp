@@ -71,7 +71,7 @@ private:
 
   // Store the command for the simulated robot
   std::vector<double> hw_command_velocity_;
-  std::vector<double> hw_command_position_;
+  // std::vector<double> hw_command_position_;
   std::vector<double> hw_positions_;
   std::vector<double> hw_velocities_;
   std::vector<double> empty_;

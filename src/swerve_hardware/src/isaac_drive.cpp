@@ -140,8 +140,8 @@ std::vector<hardware_interface::StateInterface> IsaacDriveHardware::export_state
 std::vector<hardware_interface::CommandInterface> IsaacDriveHardware::export_command_interfaces()
 {
   std::vector<hardware_interface::CommandInterface> command_interfaces;
-  uint counter_position =0;
-  uint counter_velocity =0;
+  // uint counter_position =0;
+  // uint counter_velocity =0;
 
   for (auto i = 0u; i < info_.joints.size(); i++)
   {
@@ -149,17 +149,18 @@ std::vector<hardware_interface::CommandInterface> IsaacDriveHardware::export_com
 
     if (info_.joints[i].command_interfaces[0].name == hardware_interface::HW_IF_VELOCITY) {
       command_interfaces.emplace_back(hardware_interface::CommandInterface(
-        info_.joints[i].name, hardware_interface::HW_IF_VELOCITY, &hw_command_velocity_[counter_velocity]));
+        info_.joints[i].name, hardware_interface::HW_IF_VELOCITY, &hw_command_velocity_[i]));
         RCLCPP_INFO(rclcpp::get_logger("IsaacDriveHardware"), "Velocity: %s", info_.joints[i].name.c_str() );
         joint_names_velocity_.emplace_back(info_.joints[i].name);
-        counter_velocity++;
-    } else {
-      command_interfaces.emplace_back(hardware_interface::CommandInterface(
-        info_.joints[i].name, hardware_interface::HW_IF_POSITION, &hw_command_position_[counter_position]));
-        RCLCPP_INFO(rclcpp::get_logger("IsaacDriveHardware"), "Position: %s", info_.joints[i].name.c_str() );
-        joint_names_position_.emplace_back(info_.joints[i].name);
-        counter_position++;
-    }
+        // counter_velocity++;
+    } 
+    // else {
+    //   command_interfaces.emplace_back(hardware_interface::CommandInterface(
+    //     info_.joints[i].name, hardware_interface::HW_IF_POSITION, &hw_command_position_[counter_position]));
+    //     RCLCPP_INFO(rclcpp::get_logger("IsaacDriveHardware"), "Position: %s", info_.joints[i].name.c_str() );
+    //     joint_names_position_.emplace_back(info_.joints[i].name);
+    //     counter_position++;
+    // }
   }
 
   return command_interfaces;
@@ -184,7 +185,7 @@ CallbackReturn IsaacDriveHardware::on_activate(
   for (auto i = 0u; i < hw_command_velocity_.size(); i++)
   {
     hw_command_velocity_[i] = 0;
-    hw_command_position_[i] = 0;
+    // hw_command_position_[i] = 0;
   }
 
   subscriber_is_active_ = true;

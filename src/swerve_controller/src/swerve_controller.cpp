@@ -244,7 +244,7 @@ controller_interface::return_type SwerveController::update(
 
     rear_right_velocity *= -1;
   }
-  RCLCPP_INFO(logger, "front_left_velocity: %f", front_left_velocity);
+  // RCLCPP_INFO(logger, "front_left_velocity: %f", front_left_velocity);
 
   // Set Wheel Velocities
   front_left_handle_->set_velocity(front_left_velocity);
