@@ -66,12 +66,12 @@ class Swerve(Robot):
 
         self._dof_names = ["front_left_axle_joint",
                            "front_right_axle_joint",
-                           "back_left_axle_joint",
-                           "back_right_axle_joint",
+                           "rear_left_axle_joint",
+                           "rear_right_axle_joint",
                            "front_left_wheel_joint",
                            "front_right_wheel_joint",
-                           "back_left_wheel_joint",
-                           "back_right_wheel_joint",
+                           "rear_left_wheel_joint",
+                           "rear_right_wheel_joint",
                           ]
 
     @property

@@ -38,6 +38,9 @@ from omni.isaac.cloner import GridCloner
 from swervesim.tasks.utils.usd_utils import create_distant_light
 from swervesim.utils.domain_randomization.randomize import Randomizer
 import omni.kit
+from omni.kit.viewport.utility.camera_state import ViewportCameraState
+from omni.kit.viewport.utility import get_viewport_from_window_name
+from pxr import Gf
 
 class RLTask(BaseTask):
 
@@ -106,12 +109,13 @@ class RLTask(BaseTask):
         self.progress_buf = torch.zeros(self._num_envs, device=self._device, dtype=torch.long)
         self.extras = {}
 
-    def set_up_scene(self, scene) -> None:
+    def set_up_scene(self, scene, replicate_physics=True) -> None:
         """ Clones environments based on value provided in task config and applies collision filters to mask 
             collisions across environments.
 
         Args:
             scene (Scene): Scene to add objects to.
+            replicate_physics (bool): Clone physics using PhysX API for better performance
         """
 
         super().set_up_scene(scene)
@@ -122,7 +126,7 @@ class RLTask(BaseTask):
             collision_filter_global_paths.append(self._ground_plane_path)
             scene.add_default_ground_plane(prim_path=self._ground_plane_path)
         prim_paths = self._cloner.generate_paths("/World/envs/env", self._num_envs)
-        self._env_pos = self._cloner.clone(source_prim_path="/World/envs/env_0", prim_paths=prim_paths)
+        self._env_pos = self._cloner.clone(source_prim_path="/World/envs/env_0", prim_paths=prim_paths, replicate_physics=replicate_physics)
         self._env_pos = torch.tensor(np.array(self._env_pos), device=self._device, dtype=torch.float)
         self._cloner.filter_collisions(
             self._env._world.get_physics_context().prim_path, "/World/collisions", prim_paths, collision_filter_global_paths)
@@ -132,9 +136,11 @@ class RLTask(BaseTask):
     
     def set_initial_camera_params(self, camera_position=[10, 10, 3], camera_target=[0, 0, 0]):
         if self._env._render:
-            viewport = omni.kit.viewport_legacy.get_default_viewport_window()
-            viewport.set_camera_position("/OmniverseKit_Persp", camera_position[0], camera_position[1], camera_position[2], True)
-            viewport.set_camera_target("/OmniverseKit_Persp", camera_target[0], camera_target[1], camera_target[2], True)
+            viewport_api_2 = get_viewport_from_window_name("Viewport")
+            viewport_api_2.set_active_camera("/OmniverseKit_Persp")
+            camera_state = ViewportCameraState("/OmniverseKit_Persp", viewport_api_2)
+            camera_state.set_position_world(Gf.Vec3d(camera_position[0], camera_position[1], camera_position[2]), True)
+            camera_state.set_target_world(Gf.Vec3d(camera_target[0], camera_target[1], camera_target[2]), True)
 
     @property
     def default_base_env_path(self):

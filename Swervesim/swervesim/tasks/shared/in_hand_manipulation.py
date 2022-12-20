@@ -109,7 +109,8 @@ class InHandManipulationTask(RLTask):
         self.get_object(hand_start_translation, pose_dy, pose_dz)
         self.get_goal()
 
-        super().set_up_scene(scene)
+        replicate_physics = False if self._dr_randomizer.randomize else True
+        super().set_up_scene(scene, replicate_physics)
    
         self._hands = self.get_hand_view(scene)
         scene.add(self._hands)
@@ -235,6 +236,9 @@ class InHandManipulationTask(RLTask):
                 print("Post-Reset average consecutive successes = {:.1f}".format(self.total_successes/self.total_resets))
     
     def pre_physics_step(self, actions):
+        if not self._env._world.is_playing():
+            return
+
         env_ids = self.reset_buf.nonzero(as_tuple=False).squeeze(-1)
         goal_env_ids = self.reset_goal_buf.nonzero(as_tuple=False).squeeze(-1)
 
@@ -312,7 +316,7 @@ class InHandManipulationTask(RLTask):
         # reset hand
         delta_max = self.hand_dof_upper_limits - self.hand_dof_default_pos
         delta_min = self.hand_dof_lower_limits - self.hand_dof_default_pos
-        rand_delta = delta_min + (delta_max - delta_min) * rand_floats[:, 5:5+self.num_hand_dofs]
+        rand_delta = delta_min + (delta_max - delta_min) * 0.5 * (rand_floats[:, 5:5+self.num_hand_dofs] + 1.0)
 
         pos = self.hand_dof_default_pos + self.reset_dof_pos_noise * rand_delta
         dof_pos = torch.zeros((self.num_envs, self.num_hand_dofs), device=self.device)

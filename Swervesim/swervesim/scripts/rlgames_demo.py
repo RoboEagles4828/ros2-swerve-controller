@@ -27,42 +27,74 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 
-import numpy as np
-import torch
+from swervesim.utils.hydra_cfg.hydra_utils import *
+from swervesim.utils.hydra_cfg.reformat import omegaconf_to_dict, print_dict
+from swervesim.utils.demo_util import initialize_demo
+from swervesim.utils.config_utils.path_utils import retrieve_checkpoint_path
+from swervesim.envs.vec_env_rlgames import VecEnvRLGames
+from swervesim.scripts.rlgames_train import RLGTrainer
+
 import hydra
 from omegaconf import DictConfig
 
-from swervesim.utils.hydra_cfg.hydra_utils import *
-from swervesim.utils.hydra_cfg.reformat import omegaconf_to_dict, print_dict
+import datetime
+import os
+import torch
 
-from swervesim.utils.task_util import initialize_task
-from swervesim.envs.vec_env_rlgames import VecEnvRLGames
+class RLGDemo(RLGTrainer):
+    def __init__(self, cfg, cfg_dict):
+        RLGTrainer.__init__(self, cfg, cfg_dict)
+        self.cfg.test = True
+    
 
 @hydra.main(config_name="config", config_path="../cfg")
 def parse_hydra_configs(cfg: DictConfig):
 
+    time_str = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
+
+    headless = cfg.headless
+    env = VecEnvRLGames(headless=headless, sim_device=cfg.device_id)
+
+    # ensure checkpoints can be specified as relative paths
+    if cfg.checkpoint:
+        cfg.checkpoint = retrieve_checkpoint_path(cfg.checkpoint)
+        if cfg.checkpoint is None:
+            quit()
+
     cfg_dict = omegaconf_to_dict(cfg)
     print_dict(cfg_dict)
 
-    headless = cfg.headless
-    render = not headless
+    # sets seed. if seed is -1 will pick a random one
+    from omni.isaac.core.utils.torch.maths import set_seed
+    cfg.seed = set_seed(cfg.seed, torch_deterministic=cfg.torch_deterministic)
+    cfg_dict['seed'] = cfg.seed
+    task = initialize_demo(cfg_dict, env)
 
-    env = VecEnvRLGames(headless=headless, sim_device=cfg.device_id)
-    task = initialize_task(cfg_dict, env)
+    if cfg.wandb_activate:
+        # Make sure to install WandB if you actually use this.
+        import wandb
 
-    while env._simulation_app.is_running():
-        if env._world.is_playing():
-            if env._world.current_time_step_index == 0:
-                env._world.reset(soft=True)
-            actions = torch.tensor(np.array([env.action_space.sample() for _ in range(env.num_envs)]), device=task.rl_device)
-            env._task.pre_physics_step(actions)
-            env._world.step(render=render)
-            env.sim_frame_count += 1
-            env._task.post_physics_step()
-        else:
-            env._world.step(render=render)
+        run_name = f"{cfg.wandb_name}_{time_str}"
 
-    env._simulation_app.close()
+        wandb.init(
+            project=cfg.wandb_project,
+            group=cfg.wandb_group,
+            entity=cfg.wandb_entity,
+            config=cfg_dict,
+            sync_tensorboard=True,
+            id=run_name,
+            resume="allow",
+            monitor_gym=True,
+        )
+
+    rlg_trainer = RLGDemo(cfg, cfg_dict)
+    rlg_trainer.launch_rlg_hydra(env)
+    rlg_trainer.run()
+    env.close()
+
+    if cfg.wandb_activate:
+        wandb.finish()
+
 
 if __name__ == '__main__':
     parse_hydra_configs()

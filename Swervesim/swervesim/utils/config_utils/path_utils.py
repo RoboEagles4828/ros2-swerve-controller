@@ -26,6 +26,7 @@
 # OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+
 import carb
 from hydra.utils import to_absolute_path
 import os
@@ -62,4 +63,5 @@ def retrieve_checkpoint_path(path):
         copy_to_local = download_ov_file(path, target_path)
         return to_absolute_path(target_path)
     else:
+        carb.log_error(f"Invalid checkpoint path: {path}")
         return None

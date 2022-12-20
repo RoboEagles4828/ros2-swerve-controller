@@ -55,11 +55,6 @@ class SwerveTask(RLTask):
         self._task_cfg = sim_config.task_config
 
         # normalization
-        #self.lin_vel_scale = self._task_cfg["env"]["learn"]["linearVelocityScale"]
-        #self.ang_vel_scale = self._task_cfg["env"]["learn"]["angularVelocityScale"]
-        #self.dof_pos_scale = self._task_cfg["env"]["learn"]["dofPositionScale"]
-        #self.dof_vel_scale = self._task_cfg["env"]["learn"]["dofVelocityScale"]
-        #self.action_scale = self._task_cfg["env"]["control"]["actionScale"]
         self.lin_vel_scale = 1.0
         self.ang_vel_scale = 0.5
         self.dof_pos_scale = 1
@@ -70,7 +65,6 @@ class SwerveTask(RLTask):
         self.rew_scales = {}
         self.rew_scales["lin_vel_xy"] = self._task_cfg["env"]["learn"]["linearVelocityXYRewardScale"]
         self.rew_scales["ang_vel_z"] = self._task_cfg["env"]["learn"]["angularVelocityZRewardScale"]
-        # self.rew_scales["lin_vel_z"] = self._task_cfg["env"]["learn"]["linearVelocityZRewardScale"]
         self.rew_scales["joint_acc"] = self._task_cfg["env"]["learn"]["jointAccRewardScale"]
         self.rew_scales["action_rate"] = self._task_cfg["env"]["learn"]["actionRateRewardScale"]
         self.rew_scales["cosmetic"] = self._task_cfg["env"]["learn"]["cosmeticRewardScale"]
@@ -97,8 +91,14 @@ class SwerveTask(RLTask):
         self._num_envs = self._task_cfg["env"]["numEnvs"]
         self._swerve_translation = torch.tensor([0.0, 0.0, 0.62])
         self._env_spacing = self._task_cfg["env"]["envSpacing"]
-        self._num_observations = 48
-        self._num_actions = 12
+        self._num_observations = 13
+        self._num_actions = 6
+        self.swerve_position = torch.tensor([0,0,0])
+        self._ball_position = torch.tensor([1,1,0])
+        self.target_positions = torch.zeros((self._num_envs, 3), device=self._device, dtype=torch.float32)
+        self.target_positions[:, 1] = 1
+        self.force_indices = torch.tensor([0, 2], device=self._device)
+        self.spinning_indices = torch.tensor([1, 3], device=self._device)
 
         RLTask.__init__(self, name, env)
         return
@@ -108,10 +108,12 @@ class SwerveTask(RLTask):
         self.get_target()
         super().set_up_scene(scene)
         self._swerve = SwerveView(prim_paths_expr="/World/envs/.*/swerve", name="swerveview")
+        self._balls = RigidPrimView(prim_paths_expr="/World/envs/.*/ball", name="targets_view", reset_xform_properties=False)
         scene.add(self._swerve)
         scene.add(self._swerve._axle)
         scene.add(self._swerve._wheel)
         scene.add(self._swerve._base)
+        scene.add(self._balls)
         print("scene set up")
 
         return
@@ -124,12 +126,12 @@ class SwerveTask(RLTask):
         # Configure joint properties
         joint_paths = ["front_left_axle_link",
                            "front_right_axle_link",
-                           "back_left_axle_link",
-                           "back_right_axle_link",
+                           "rear_left_axle_link",
+                           "rear_right_axle_link",
                            "front_left_wheel_link",
                            "front_right_wheel_link",
-                           "back_left_wheel_link",
-                           "back_right_wheel_link",
+                           "rear_left_wheel_link",
+                           "rear_right_wheel_link",
                         ]
         # for quadrant in ["LF", "LH", "RF", "RH"]:
         #     for component, abbrev in [("HIP", "H"), ("THIGH", "K")]:
@@ -149,50 +151,30 @@ class SwerveTask(RLTask):
         color = torch.tensor([1, 0, 0])
         ball = DynamicSphere(
             prim_path=self.default_zero_env_path + "/ball", 
-            #translation=self._ball_position, 
+            translation=self._ball_position, 
             name="target_0",
             radius=radius,
             color=color,
         )
-        #self._sim_config.apply_articulation_settings("ball", get_prim_at_path(ball.prim_path), self._sim_config.parse_actor_config("ball"))
-        #ball.set_collision_enabled(False)
+        self._sim_config.apply_articulation_settings("ball", get_prim_at_path(ball.prim_path), self._sim_config.parse_actor_config("ball"))
+        ball.set_collision_enabled(True)
     def get_observations(self) -> dict:
         print("line 156")
-        torso_position, torso_rotation = self._swerve.get_world_poses(clone=False)
-        root_velocities = self._swerve.get_velocities(clone=False)
-        dof_pos = self._swerve.get_joint_positions(clone=False)
-        dof_vel = self._swerve.get_joint_velocities(clone=False)
+        self.root_pos, self.root_rot = self._swerve.get_world_poses(clone=False)
+        self.root_velocities = self._copters.get_velocities(clone=False)
 
-        velocity = root_velocities[:, 0:3]
-        ang_velocity = root_velocities[:, 3:6]
+        root_positions = self.root_pos - self._env_pos
+        root_quats = self.root_rot
+        root_linvels = self.root_velocities[:, :3]
+        root_angvels = self.root_velocities[:, 3:]
 
-        base_lin_vel = quat_rotate_inverse(torso_rotation, velocity) * self.lin_vel_scale
-        base_ang_vel = quat_rotate_inverse(torso_rotation, ang_velocity) * self.ang_vel_scale
-        projected_gravity = quat_rotate(torso_rotation, self.gravity_vec)
-        dof_pos_scaled = (dof_pos - self.default_dof_pos) * self.dof_pos_scale
-
-        commands_scaled = self.commands * torch.tensor(
-            [self.lin_vel_scale, self.lin_vel_scale, self.ang_vel_scale],
-            requires_grad=False,
-            device=self.commands.device,
-        )
-
-        obs = torch.cat(
-            (
-                base_lin_vel,
-                base_ang_vel,
-                projected_gravity,
-                commands_scaled,
-                dof_pos_scaled,
-                dof_vel * self.dof_vel_scale,
-                self.actions,
-            ),
-            dim=-1,
-        )
-        self.obs_buf[:] = obs
+        self.obs_buf[..., 0:3] = (self.target_positions - root_positions) / 3
+        self.obs_buf[..., 3:7] = root_quats
+        self.obs_buf[..., 7:10] = root_linvels / 2
+        self.obs_buf[..., 10:13] = root_angvels / math.pi
 
         observations = {
-            self._swerve.name: {
+            self._copters.name: {
                 "obs_buf": self.obs_buf
             }
         }
@@ -200,12 +182,16 @@ class SwerveTask(RLTask):
         return observations
 
     def pre_physics_step(self, actions) -> None:
-        print("line 199")
+        print("line 203")
+
         reset_env_ids = self.reset_buf.nonzero(as_tuple=False).squeeze(-1)
         if len(reset_env_ids) > 0:
             self.reset_idx(reset_env_ids)
 
-        indices = torch.arange(self._swerve.count, dtype=torch.int32, device=self._device)
+        set_target_ids = (self.progress_buf % 500 == 0).nonzero(as_tuple=False).squeeze(-1)
+        if len(set_target_ids) > 0:
+            self.set_targets(set_target_ids)
+
         self.actions[:] = actions.clone().to(self._device)
         current_targets = self.current_targets + self.action_scale * self.actions * self.dt 
         self.current_targets[:] = torch.clamp(current_targets, self.swerve_dof_lower_limits, self.swerve_dof_upper_limits)
@@ -246,20 +232,19 @@ class SwerveTask(RLTask):
         self.progress_buf[env_ids] = 0
         self.last_actions[env_ids] = 0.
         self.last_dof_vel[env_ids] = 0.
-        print("line 245")
+        print("line 249")
+
     def post_reset(self):
-        print("line 247")
-        self.initial_root_pos, self.initial_root_rot = self._swerve.get_world_poses()
-        self.current_targets = self.default_dof_pos.clone()
+        print("line 252")
+        self.root_pos, self.root_rot = self._swerve.get_world_poses()
+        self.root_velocities = self._copters.get_velocities()
 
-        dof_limits = self._swerve.get_dof_limits()
-        self.swerve_dof_lower_limits = dof_limits[0, :, 0].to(device=self._device)
-        self.swerve_dof_upper_limits = dof_limits[0, :, 1].to(device=self._device)
+        self.dof_pos = self._copters.get_joint_positions()
+        self.dof_vel = self._copters.get_joint_velocities()
 
-        self.commands = torch.zeros(self._num_envs, 3, dtype=torch.float, device=self._device, requires_grad=False)
-        self.commands_y = self.commands.view(self._num_envs, 3)[..., 1]
-        self.commands_x = self.commands.view(self._num_envs, 3)[..., 0]
-        self.commands_yaw = self.commands.view(self._num_envs, 3)[..., 2]
+        self.initial_ball_pos, self.initial_ball_rot = self._balls.get_world_poses()
+        self.initial_root_pos, self.initial_root_rot = self.root_pos.clone(), self.root_rot.clone()
+
 
         # initialize some data used later on
         self.extras = {}
@@ -278,6 +263,17 @@ class SwerveTask(RLTask):
         indices = torch.arange(self._swerve.count, dtype=torch.int64, device=self._device)
         self.reset_idx(indices)
         print("line 276")
+    def set_targets(self, env_ids):
+        num_sets = len(env_ids)
+        envs_long = env_ids.long()
+        # set target position randomly with x, y in (-1, 1) and z in (1, 2)
+        self.target_positions[envs_long, 0:2] = torch.rand((num_sets, 2), device=self._device) * 2 - 1
+        self.target_positions[envs_long, 2] = torch.rand(num_sets, device=self._device) + 1
+
+        # shift the target up so it visually aligns better
+        ball_pos = self.target_positions[envs_long] + self._env_pos[envs_long]
+        ball_pos[:, 2] += 0.4
+        self._balls.set_world_poses(ball_pos[:, 0:3], self.initial_ball_rot[envs_long].clone(), indices=env_ids)
     def calculate_metrics(self) -> None:
         torso_position, torso_rotation = self._swerve.get_world_poses(clone=False)
         root_velocities = self._swerve.get_velocities(clone=False)

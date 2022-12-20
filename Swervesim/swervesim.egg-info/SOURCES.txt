@@ -9,11 +9,5 @@ swervesim.egg-info/top_level.txt
 swervesim/envs/__init__.py
 swervesim/envs/vec_env_rlgames.py
 swervesim/envs/vec_env_rlgames_mt.py
-swervesim/script/__init__.py
-swervesim/script/random_policy.py
-swervesim/script/rlgames_play.py
-swervesim/script/rlgames_train.py
-swervesim/script/rlgames_train_mt.py
-swervesim/utils/__init__.py
 swervesim/utils/demo_util.py
 swervesim/utils/task_util.py

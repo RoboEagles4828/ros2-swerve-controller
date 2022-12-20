@@ -32,7 +32,7 @@ from swervesim.utils.hydra_cfg.reformat import omegaconf_to_dict, print_dict
 from swervesim.utils.rlgames.rlgames_utils import RLGPUAlgoObserver, RLGPUEnv
 from swervesim.utils.task_util import initialize_task
 from swervesim.utils.config_utils.path_utils import retrieve_checkpoint_path
-from swervesim.envs.vec_env_rlgames_mt import VecEnvRLGamesMT
+from swervesim.envs.vec_env_rlgames import VecEnvRLGames
 
 import hydra
 from omegaconf import DictConfig
@@ -40,14 +40,9 @@ from omegaconf import DictConfig
 from rl_games.common import env_configurations, vecenv
 from rl_games.torch_runner import Runner
 
-import copy
 import datetime
 import os
-import threading
-import queue
-
-from omni.isaac.gym.vec_env.vec_env_mt import TrainerMT
-
+import torch
 
 class RLGTrainer():
     def __init__(self, cfg, cfg_dict):
@@ -72,7 +67,7 @@ class RLGTrainer():
     def run(self):
         # create runner and set the settings
         runner = Runner(RLGPUAlgoObserver())
-        runner.load(copy.deepcopy(self.rlg_config_dict))
+        runner.load(self.rlg_config_dict)
         runner.reset()
 
         # dump config dict
@@ -81,25 +76,6 @@ class RLGTrainer():
         with open(os.path.join(experiment_dir, 'config.yaml'), 'w') as f:
             f.write(OmegaConf.to_yaml(self.cfg))
 
-        time_str = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
-
-        if self.cfg.wandb_activate:
-            # Make sure to install WandB if you actually use this.
-            import wandb
-
-            run_name = f"{self.cfg.wandb_name}_{time_str}"
-
-            wandb.init(
-                project=self.cfg.wandb_project,
-                group=self.cfg.wandb_group,
-                entity=self.cfg.wandb_entity,
-                config=self.cfg_dict,
-                sync_tensorboard=True,
-                id=run_name,
-                resume="allow",
-                monitor_gym=True,
-            )
-
         runner.run({
             'train': not self.cfg.test,
             'play': self.cfg.test,
@@ -107,80 +83,14 @@ class RLGTrainer():
             'sigma': None
         })
 
-        if self.cfg.wandb_activate:
-            wandb.finish()
-
-
-class Trainer(TrainerMT):
-    def __init__(self, trainer, env):
-        self.ppo_thread = None
-        self.action_queue = None
-        self.data_queue = None
-
-        self.trainer = trainer
-        self.is_running = False
-        self.env = env
-
-        self.create_task()
-        self.run()
-
-    def create_task(self):
-        self.trainer.launch_rlg_hydra(self.env)
-        task = initialize_task(self.trainer.cfg_dict, self.env, init_sim=False)
-        self.task = task
-
-    def run(self):
-        self.is_running = True
-
-        self.action_queue = queue.Queue(1)
-        self.data_queue = queue.Queue(1)
-
-        self.env.initialize(self.action_queue, self.data_queue)
-        self.ppo_thread = PPOTrainer(self.env, self.task, self.trainer)
-        self.ppo_thread.daemon = True
-        self.ppo_thread.start()
-
-    def stop(self):
-        self.env.stop = True
-        self.env.clear_queues()
-        if self.action_queue:
-            self.action_queue.join()
-        if self.data_queue:
-            self.data_queue.join()
-        if self.ppo_thread:
-            self.ppo_thread.join()
-
-        self.action_queue = None
-        self.data_queue = None
-        self.ppo_thread = None
-        self.is_running = False
-
-
-class PPOTrainer(threading.Thread):
-    def __init__(self, env, task, trainer):
-        super().__init__()
-        self.env = env
-        self.task = task
-        self.trainer = trainer
-
-    def run(self):
-        from omni.isaac.gym.vec_env import TaskStopException
-        print("starting ppo...")
-
-        try:
-            self.trainer.run()
-            # trainer finished - send stop signal to main thread
-            self.env.send_actions(None)
-            self.env.stop = True
-        except TaskStopException:
-            print("Task Stopped!")
-
 
 @hydra.main(config_name="config", config_path="../cfg")
 def parse_hydra_configs(cfg: DictConfig):
 
+    time_str = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
+
     headless = cfg.headless
-    env = VecEnvRLGamesMT(headless=headless, sim_device=cfg.device_id)
+    env = VecEnvRLGames(headless=headless, sim_device=cfg.device_id)
 
     # ensure checkpoints can be specified as relative paths
     if cfg.checkpoint:
@@ -194,11 +104,36 @@ def parse_hydra_configs(cfg: DictConfig):
     # sets seed. if seed is -1 will pick a random one
     from omni.isaac.core.utils.torch.maths import set_seed
     cfg.seed = set_seed(cfg.seed, torch_deterministic=cfg.torch_deterministic)
+    cfg_dict['seed'] = cfg.seed
+
+    task = initialize_task(cfg_dict, env)
+
+    if cfg.wandb_activate:
+        # Make sure to install WandB if you actually use this.
+        import wandb
+
+        run_name = f"{cfg.wandb_name}_{time_str}"
+
+        wandb.init(
+            project=cfg.wandb_project,
+            group=cfg.wandb_group,
+            entity=cfg.wandb_entity,
+            config=cfg_dict,
+            sync_tensorboard=True,
+            id=run_name,
+            resume="allow",
+            monitor_gym=True,
+        )
+
 
     rlg_trainer = RLGTrainer(cfg, cfg_dict)
-    trainer = Trainer(rlg_trainer, env)
+    rlg_trainer.launch_rlg_hydra(env)
+    rlg_trainer.run()
+    env.close()
 
-    trainer.env.run(trainer)
+    if cfg.wandb_activate:
+        wandb.finish()
+
 
 if __name__ == '__main__':
     parse_hydra_configs()
