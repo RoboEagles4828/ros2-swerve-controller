@@ -1,0 +1,57 @@
+{
+    "name": "isaac-sim",
+    "build": {
+        "dockerfile": "./Dockerfile",
+        "context": "."
+    },
+    "features": {
+        "ghcr.io/devcontainers/features/common-utils:1": {
+            "installZsh": "true",
+            "configureZshAsDefaultShell": "true",
+            "username": "vscode",
+            "uid": "1000",
+            "gid": "1000",
+            "upgradePackages": "true"
+        }
+    },
+    "containerEnv": {
+        "ACCEPT_EULA": "Y",
+        "DISPLAY": "${localEnv:DISPLAY}",
+        "NVIDIA_DRIVER_CAPABILITIES": "all",
+        "OMNI_USER": "admin",
+        "OMNI_PASS": "admin",
+        "OMNI_SERVER": "http://omniverse-content-production.s3-us-west-2.amazonaws.com/Assets/Isaac/2022.2.0"
+    },
+    "initializeCommand": "xhost +",
+    "mounts": [
+        // X11
+        "source=${localEnv:HOME}/.Xauthority,target=/home/vscode/.Xauthority,type=bind",
+        // Vulkan
+        "source=/usr/share/glvnd/egl_vendor.d/10_nvidia.json,target=/usr/share/glvnd/egl_vendor.d/10_nvidia.json,type=bind,consistency=cached",
+        "source=/usr/share/vulkan/icd.d/nvidia_icd.json,target=/usr/share/vulkan/icd.d/nvidia_icd.json,type=bind,consistency=cached",
+        "source=/usr/share/vulkan/implicit_layer.d/nvidia_layers.json,target=/usr/share/vulkan/implicit_layer.d/nvidia_layers.json,type=bind,consistency=cached",
+        // Isaac
+        "source=${localEnv:HOME}/docker/isaac-sim/cache/ov,target=/home/vscode/.cache/ov,type=bind,consistency=cached",
+        "source=${localEnv:HOME}/docker/isaac-sim/cache/pip,target=/home/vscode/.cache/pip,type=bind,consistency=cached",
+        "source=${localEnv:HOME}/docker/isaac-sim/cache/glcache,target=/home/vscode/.cache/nvidia/GLCache,type=bind,consistency=cached",
+        "source=${localEnv:HOME}/docker/isaac-sim/cache/computecache,target=/home/vscode/.nv/ComputeCache,type=bind,consistency=cached",
+        "source=${localEnv:HOME}/docker/isaac-sim/logs,target=/home/vscode/.nvidia-omniverse/logs,type=bind,consistency=cached",
+        "source=${localEnv:HOME}/docker/isaac-sim/config,target=/home/vscode/.nvidia-omniverse/config,type=bind,consistency=cached",
+        "source=${localEnv:HOME}/docker/isaac-sim/data,target=/home/vscode/.local/share/ov/data,type=bind,consistency=cached",
+        "source=${localEnv:HOME}/docker/isaac-sim/documents,target=/home/vscode/Documents,type=bind,consistency=cached"
+    ],
+    "runArgs": [
+        "--runtime=nvidia",
+        "--gpus", "all",
+        "--network=host"
+    ],
+    "privileged": true,
+    // Use 'forwardPorts' to make a list of ports inside the container available locally.
+    // "forwardPorts": [],
+
+    // Use 'postCreateCommand' to run commands after the container is created.
+    // "postCreateCommand": "uname -a",
+
+    // Set `remoteUser` to `root` to connect as root instead. More info: https://aka.ms/vscode-remote/containers/non-root.
+    "remoteUser": "vscode"
+}

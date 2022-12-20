@@ -27,7 +27,7 @@ using std::placeholders::_1;
 
 namespace swerve_hardware
 {
-CallbackReturn IsaacDriveHardware::on_init(const hardware_interface::HardwareInfo & info)
+hardware_interface::CallbackReturn IsaacDriveHardware::on_init(const hardware_interface::HardwareInfo & info)
 {
 
   // rmw_qos_profile_t custom_qos_profile = rmw_qos_profile_default;
@@ -56,9 +56,9 @@ CallbackReturn IsaacDriveHardware::on_init(const hardware_interface::HardwareInf
 
 
   // INTERFACE SETUP
-  if (hardware_interface::SystemInterface::on_init(info) != CallbackReturn::SUCCESS)
+  if (hardware_interface::SystemInterface::on_init(info) != hardware_interface::CallbackReturn::SUCCESS)
   {
-    return CallbackReturn::ERROR;
+    return hardware_interface::CallbackReturn::ERROR;
   }
 
   hw_positions_.resize(info_.joints.size(), std::numeric_limits<double>::quiet_NaN());
@@ -76,7 +76,7 @@ CallbackReturn IsaacDriveHardware::on_init(const hardware_interface::HardwareInf
         rclcpp::get_logger("IsaacDriveHardware"),
         "Joint '%s' has %zu command interfaces found. 1 expected.", joint.name.c_str(),
         joint.command_interfaces.size());
-      return CallbackReturn::ERROR;
+      return hardware_interface::CallbackReturn::ERROR;
     }
 
     if (joint.command_interfaces[0].name != hardware_interface::HW_IF_VELOCITY && joint.command_interfaces[0].name != hardware_interface::HW_IF_POSITION)
@@ -85,7 +85,7 @@ CallbackReturn IsaacDriveHardware::on_init(const hardware_interface::HardwareInf
         rclcpp::get_logger("IsaacDriveHardware"),
         "Joint '%s' have %s command interfaces found. '%s' expected.", joint.name.c_str(),
         joint.command_interfaces[0].name.c_str(), hardware_interface::HW_IF_VELOCITY);
-      return CallbackReturn::ERROR;
+      return hardware_interface::CallbackReturn::ERROR;
     }
 
     if (joint.state_interfaces.size() != 2)
@@ -94,7 +94,7 @@ CallbackReturn IsaacDriveHardware::on_init(const hardware_interface::HardwareInf
         rclcpp::get_logger("IsaacDriveHardware"),
         "Joint '%s' has %zu state interface. 2 expected.", joint.name.c_str(),
         joint.state_interfaces.size());
-      return CallbackReturn::ERROR;
+      return hardware_interface::CallbackReturn::ERROR;
     }
 
     if (joint.state_interfaces[0].name != hardware_interface::HW_IF_POSITION)
@@ -103,7 +103,7 @@ CallbackReturn IsaacDriveHardware::on_init(const hardware_interface::HardwareInf
         rclcpp::get_logger("IsaacDriveHardware"),
         "Joint '%s' have '%s' as first state interface. '%s' expected.", joint.name.c_str(),
         joint.state_interfaces[0].name.c_str(), hardware_interface::HW_IF_POSITION);
-      return CallbackReturn::ERROR;
+      return hardware_interface::CallbackReturn::ERROR;
     }
 
     if (joint.state_interfaces[1].name != hardware_interface::HW_IF_VELOCITY)
@@ -112,11 +112,11 @@ CallbackReturn IsaacDriveHardware::on_init(const hardware_interface::HardwareInf
         rclcpp::get_logger("IsaacDriveHardware"),
         "Joint '%s' have '%s' as second state interface. '%s' expected.", joint.name.c_str(),
         joint.state_interfaces[1].name.c_str(), hardware_interface::HW_IF_VELOCITY);
-      return CallbackReturn::ERROR;
+      return hardware_interface::CallbackReturn::ERROR;
     }
   }
 
-  return CallbackReturn::SUCCESS;
+  return hardware_interface::CallbackReturn::SUCCESS;
 }
 
 
@@ -167,7 +167,7 @@ std::vector<hardware_interface::CommandInterface> IsaacDriveHardware::export_com
 
 
 
-CallbackReturn IsaacDriveHardware::on_activate(
+hardware_interface::CallbackReturn IsaacDriveHardware::on_activate(
   const rclcpp_lifecycle::State & /*previous_state*/)
 {
   RCLCPP_INFO(rclcpp::get_logger("IsaacDriveHardware"), "Activating ...please wait...");
@@ -191,26 +191,26 @@ CallbackReturn IsaacDriveHardware::on_activate(
 
   RCLCPP_INFO(rclcpp::get_logger("IsaacDriveHardware"), "Successfully activated!");
 
-  return CallbackReturn::SUCCESS;
+  return hardware_interface::CallbackReturn::SUCCESS;
 }
 
 
 
-CallbackReturn IsaacDriveHardware::on_deactivate(
+hardware_interface::CallbackReturn IsaacDriveHardware::on_deactivate(
   const rclcpp_lifecycle::State & /*previous_state*/)
 {
   RCLCPP_INFO(rclcpp::get_logger("IsaacDriveHardware"), "Deactivating ...please wait...");
   subscriber_is_active_ = false;
   RCLCPP_INFO(rclcpp::get_logger("IsaacDriveHardware"), "Successfully deactivated!");
 
-  return CallbackReturn::SUCCESS;
+  return hardware_interface::CallbackReturn::SUCCESS;
 }
 
 
 // ||                        ||
 // \/ THE STUFF THAT MATTERS \/
 
-hardware_interface::return_type IsaacDriveHardware::read()
+hardware_interface::return_type IsaacDriveHardware::read(const rclcpp::Time & time, const rclcpp::Duration & period)
 {
   rclcpp::spin_some(node_);
   std::shared_ptr<sensor_msgs::msg::JointState> last_command_msg;
@@ -239,7 +239,7 @@ hardware_interface::return_type IsaacDriveHardware::read()
 
 
 
-hardware_interface::return_type swerve_hardware::IsaacDriveHardware::write()
+hardware_interface::return_type swerve_hardware::IsaacDriveHardware::write(const rclcpp::Time & time, const rclcpp::Duration & period)
 {
   //RCLCPP_INFO(rclcpp::get_logger("IsaacDriveHardware"), "Velocity: %f", hw_command_velocity_[0]);
 
