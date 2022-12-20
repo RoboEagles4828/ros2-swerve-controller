@@ -50,7 +50,7 @@ void Wheel::set_velocity(double velocity)
 {
   velocity_.get().set_value(velocity);
 }
-Axle::Axle(std::reference_wrapper<hardware_interface::LoanedCommandInterface> velocity,std::reference_wrapper< const hardware_interface::LoanedStateInterface> position, std::string name) : position_(position), velocity_(velocity), name(std::move(name)) {}
+Axle::Axle(std::reference_wrapper<hardware_interface::LoanedCommandInterface> velocity,std::reference_wrapper< const hardware_interface::LoanedStateInterface> position, std::string name) :  velocity_(velocity), position_(position), name(std::move(name)) {}
 
 void Axle::set_velocity(double velocity)
 {
@@ -201,7 +201,10 @@ controller_interface::return_type SwerveController::update(
     //keep it in -90 to 90 scope
     front_left_position = ((int)(front_left_position) + 90) % 180 - 90;
     //convert back to radians
-    front_left_position = (M_PI / 180) * front_left_position;
+    if(abs(front_left_position)>=0.01){
+       front_left_position = (M_PI / 180) * front_left_position;
+    }
+   
 
     front_left_velocity *= -1;
   }
@@ -214,7 +217,9 @@ controller_interface::return_type SwerveController::update(
     //keep it in -90 to 90 scope
     front_right_position = ((int)(front_right_position) + 90) % 180 - 90;
     //convert back to radians
-    front_right_position = (M_PI / 180) * front_right_position;
+    if(abs(front_right_position)>=0.01){
+       front_right_position = (M_PI / 180) * front_right_position;
+    }
 
     front_right_velocity *= -1;
   }
@@ -227,7 +232,9 @@ controller_interface::return_type SwerveController::update(
     //keep it in -90 to 90 scope
     rear_left_position = ((int)(rear_left_position) + 90) % 180 - 90;
     //convert back to radians
-    rear_left_position = (M_PI / 180) * rear_left_position;
+    if(abs(rear_left_position)>=0.01){
+      rear_left_position = (M_PI / 180) * rear_left_position;
+    }
 
     rear_left_velocity *= -1;
   }
@@ -240,12 +247,14 @@ controller_interface::return_type SwerveController::update(
     //keep it in -90 to 90 scope
     rear_right_position = ((int)(rear_right_position) + 90) % 180 - 90;
     //convert back to radians
-    rear_right_position = (M_PI / 180) * rear_right_position;
+    if(abs(rear_right_position)>=0.01){
+      rear_right_position = (M_PI / 180) * rear_right_position;
+    }
 
     rear_right_velocity *= -1;
   }
-  // RCLCPP_INFO(logger, "front_left_velocity: %f", front_left_velocity);
-
+  // RCLCPP_INFO(logger, "front_left_position: %f", front_left_position);
+  // RCLCPP_INFO(logger, "front_left_current_position: %f", front_left_current_pos);
   // Set Wheel Velocities
   front_left_handle_->set_velocity(front_left_velocity);
   front_right_handle_->set_velocity(front_right_velocity);
@@ -255,45 +264,46 @@ controller_interface::return_type SwerveController::update(
    // Set Wheel Positions
    //remmeber to comment this back in!
    //Has a 1 degree tolerance. Turns clockwise if less than, counter clockwise if greater than
-  if(front_left_current_pos>front_left_position+M_PI/180||front_left_current_pos<front_left_position-M_PI/180){
+  float turningspeed =5.0;
+  if(front_left_current_pos>front_left_position+(M_PI/180)||front_left_current_pos<front_left_position-(M_PI/180)){
     if(front_left_position>front_left_current_pos){
-    front_left_handle_2_->set_velocity(5.0);
+      front_left_handle_2_->set_velocity(turningspeed);
     }
     else{
-      front_left_handle_2_->set_velocity(-5.0);
+      front_left_handle_2_->set_velocity(-1*turningspeed);
     } 
   }
   else{
     front_left_handle_2_->set_velocity(0.0);
   }
-  if(front_right_current_pos>front_right_position+M_PI/180||front_right_current_pos<front_right_position-M_PI/180){
+  if(front_right_current_pos>front_right_position+(M_PI/180)||front_right_current_pos<front_right_position-(M_PI/180)){
     if(front_right_position>front_right_current_pos){
-      front_right_handle_2_->set_velocity(5.0);
+      front_right_handle_2_->set_velocity(turningspeed);
     }
     else{
-      front_right_handle_2_->set_velocity(-5.0);
+      front_right_handle_2_->set_velocity(-1*turningspeed);
     } 
   }
   else{
     front_left_handle_2_->set_velocity(0.0);
   }
-  if(rear_left_current_pos>rear_left_position+M_PI/180||rear_left_current_pos<rear_left_position-M_PI/180){
+  if(rear_left_current_pos>rear_left_position+(M_PI/180)||rear_left_current_pos<rear_left_position-(M_PI/180)){
     if(rear_left_position>rear_left_current_pos){
-      rear_left_handle_2_->set_velocity(5.0);
+      rear_left_handle_2_->set_velocity(turningspeed);
     }
     else{
-      rear_left_handle_2_->set_velocity(-5.0);
+      rear_left_handle_2_->set_velocity(-1*turningspeed);
     } 
   }
   else{
     front_left_handle_2_->set_velocity(0.0);
   }
-  if(rear_right_current_pos>rear_right_position+M_PI/180||rear_right_current_pos<rear_right_position-M_PI/180){
+  if(rear_right_current_pos>rear_right_position+(M_PI/180)||rear_right_current_pos<rear_right_position-(M_PI/180)){
     if(rear_right_position>rear_right_current_pos){
-      rear_right_handle_2_->set_velocity(5.0);
+      rear_right_handle_2_->set_velocity(turningspeed);
     }
     else{
-      rear_right_handle_2_->set_velocity(-5.0);
+      rear_right_handle_2_->set_velocity(-1*turningspeed);
     } 
   }
   else{
@@ -303,10 +313,10 @@ controller_interface::return_type SwerveController::update(
   //remmeber to comment this back in!
 
   //test TEMPORARY!
-  //front_left_handle_2_->set_position(M_PI * 2.5);
-  //front_right_handle_2_->set_position(front_right_position);
-  //rear_left_handle_2_->set_position(rear_left_position);
-  //rear_right_handle_2_->set_position(rear_right_position);
+  // front_left_handle_2_->set_velocity(15.0);
+  // front_right_handle_2_->set_velocity(5.0);
+  // rear_left_handle_2_->set_velocity(5.0);
+  // rear_right_handle_2_->set_velocity(5.0);
   //test TEMPORARY!
 
 

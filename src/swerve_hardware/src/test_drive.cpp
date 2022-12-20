@@ -229,7 +229,7 @@ hardware_interface::return_type swerve_hardware::TestDriveHardware::write()
   // Uncomment below if you want verbose messages for debugging.
   for (auto i = 0u; i < hw_command_velocity_.size(); i++)
   {
-    // RCLCPP_INFO(rclcpp::get_logger("TestDriveHardware"), "Wheel %u Velocity: %f", i, hw_command_velocity_[i]);
+    RCLCPP_INFO(rclcpp::get_logger("TestDriveHardware"), "Wheel %u Velocity: %f", i, hw_command_velocity_[i]);
   }
 
   return hardware_interface::return_type::OK;

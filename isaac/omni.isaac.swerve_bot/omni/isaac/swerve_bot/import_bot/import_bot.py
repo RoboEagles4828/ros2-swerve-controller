@@ -28,7 +28,7 @@ class ImportBot(BaseSample):
     def setup_scene(self):
         world = self.get_world()
         world.scene.add_default_ground_plane()
-        self.setup_perspective_cam()
+        # self.setup_perspective_cam()
         self.setup_world_action_graph()
         return
 
@@ -41,7 +41,8 @@ class ImportBot(BaseSample):
         carb.log_info(self.path_to_urdf)
 
         self._robot_prim_path = self.import_robot(self.path_to_urdf)
-        
+
+
         if self._robot_prim_path is None:
             print("Error: failed to import robot")
             return
@@ -83,20 +84,20 @@ class ImportBot(BaseSample):
        
         front_left_axle = UsdPhysics.DriveAPI.Get(stage.GetPrimAtPath(f"{robot_prim_path}/{chassis_name}/front_left_axle_joint"), "angular")
         front_right_axle = UsdPhysics.DriveAPI.Get(stage.GetPrimAtPath(f"{robot_prim_path}/{chassis_name}/front_right_axle_joint"), "angular")
-        back_left_axle = UsdPhysics.DriveAPI.Get(stage.GetPrimAtPath(f"{robot_prim_path}/{chassis_name}/back_left_axle_joint"), "angular")
-        back_right_axle = UsdPhysics.DriveAPI.Get(stage.GetPrimAtPath(f"{robot_prim_path}/{chassis_name}/back_right_axle_joint"), "angular")
+        rear_left_axle = UsdPhysics.DriveAPI.Get(stage.GetPrimAtPath(f"{robot_prim_path}/{chassis_name}/rear_left_axle_joint"), "angular")
+        rear_right_axle = UsdPhysics.DriveAPI.Get(stage.GetPrimAtPath(f"{robot_prim_path}/{chassis_name}/rear_right_axle_joint"), "angular")
         front_left_wheel = UsdPhysics.DriveAPI.Get(stage.GetPrimAtPath(f"{robot_prim_path}/front_left_axle_link/front_left_wheel_joint"), "angular")
         front_right_wheel = UsdPhysics.DriveAPI.Get(stage.GetPrimAtPath(f"{robot_prim_path}/front_right_axle_link/front_right_wheel_joint"), "angular")
-        back_left_wheel = UsdPhysics.DriveAPI.Get(stage.GetPrimAtPath(f"{robot_prim_path}/back_left_axle_link/back_left_wheel_joint"), "angular")
-        back_right_wheel = UsdPhysics.DriveAPI.Get(stage.GetPrimAtPath(f"{robot_prim_path}/back_right_axle_link/back_right_wheel_joint"), "angular")
+        rear_left_wheel = UsdPhysics.DriveAPI.Get(stage.GetPrimAtPath(f"{robot_prim_path}/rear_left_axle_link/rear_left_wheel_joint"), "angular")
+        rear_right_wheel = UsdPhysics.DriveAPI.Get(stage.GetPrimAtPath(f"{robot_prim_path}/rear_right_axle_link/rear_right_wheel_joint"), "angular")
         set_drive_params(front_left_axle, 10000000.0, 100000.0, 98.0)
         set_drive_params(front_right_axle, 10000000.0, 100000.0, 98.0)
-        set_drive_params(back_left_axle, 10000000.0, 100000.0, 98.0)
-        set_drive_params(back_right_axle, 10000000.0, 100000.0, 98.0)
+        set_drive_params(rear_left_axle, 10000000.0, 100000.0, 98.0)
+        set_drive_params(rear_right_axle, 10000000.0, 100000.0, 98.0)
         set_drive_params(front_left_wheel, 0, math.radians(1e5), 98.0)
         set_drive_params(front_right_wheel, 0, math.radians(1e5), 98.0)
-        set_drive_params(back_left_wheel, 0, math.radians(1e5), 98.0)
-        set_drive_params(back_right_wheel, 0, math.radians(1e5), 98.0)
+        set_drive_params(rear_left_wheel, 0, math.radians(1e5), 98.0)
+        set_drive_params(rear_right_wheel, 0, math.radians(1e5), 98.0)
         #self.create_lidar(robot_prim_path)
         #self.create_depth_camera()
         self.setup_robot_action_graph(robot_prim_path)
@@ -241,7 +242,7 @@ class ImportBot(BaseSample):
                     ("Context.outputs:context", "SubscribeJointState.inputs:context"),
                     ("SubscribeJointState.outputs:jointNames", "articulation_controller.inputs:jointNames"),
                     ("SubscribeJointState.outputs:velocityCommand", "articulation_controller.inputs:velocityCommand"),
-                    ("SubscribeJointState.outputs:positionCommand", "articulation_controller.inputs:positionCommand"),
+                    # ("SubscribeJointState.outputs:positionCommand", "articulation_controller.inputs:positionCommand"),
                 ],
             }
         )

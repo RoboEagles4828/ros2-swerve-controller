@@ -15,24 +15,24 @@ class PublishJointCmd(Node):
 
     def timer_callback(self):
         velocity_cmds = JointState()
-        position_cmds = JointState()
+        # position_cmds = JointState()
         
         velocity_cmds.name = [
             'front_left_wheel_joint', 
             'front_right_wheel_joint',
-            'back_left_wheel_joint',
-            'back_right_wheel_joint']
-        position_cmds.name = [
+            'rear_left_wheel_joint',
+            'rear_right_wheel_joint',
             'front_left_axle_joint', 
             'front_right_axle_joint',
-            'back_left_axle_joint',
-            'back_right_axle_joint']
+            'rear_left_axle_joint',
+            'rear_right_axle_joint']
+        # position_cmds.name = []
         
-        velocity_cmds.velocity = [ 10.0, 10.0, 10.0, 10.0 ]
-        position_cmds.position = [45.0, 45.0, 45.0, 45.0]
+        velocity_cmds.velocity = [ 0.0, 0.0, 0.0, 0.0, 50.0, 50.0, 50.0, 50.0]
+        # position_cmds.position = []
 
         self.publisher_.publish(velocity_cmds)
-        self.publisher_.publish(position_cmds)
+        # self.publisher_.publish(position_cmds)
         self.get_logger().info('Publishing: ...')
         self.i += 1
 

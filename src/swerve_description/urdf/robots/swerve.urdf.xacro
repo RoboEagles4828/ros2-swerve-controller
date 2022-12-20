@@ -23,10 +23,10 @@
   <xacro:swerve_axle prefix="front_right" parent="swerve_chassis_link">
     <origin xyz="-${axle_pos} ${axle_pos_y} ${axle_pos}" rpy="${pi / 2} 0 0" />
   </xacro:swerve_axle>
-  <xacro:swerve_axle prefix="back_left" parent="swerve_chassis_link">
+  <xacro:swerve_axle prefix="rear_left" parent="swerve_chassis_link">
     <origin xyz="${axle_pos} ${axle_pos_y} -${axle_pos}" rpy="${pi / 2} 0 0" />
   </xacro:swerve_axle>
-  <xacro:swerve_axle prefix="back_right" parent="swerve_chassis_link">
+  <xacro:swerve_axle prefix="rear_right" parent="swerve_chassis_link">
     <origin xyz="-${axle_pos} ${axle_pos_y} -${axle_pos}" rpy="${pi / 2} 0 0" />
   </xacro:swerve_axle>
 
