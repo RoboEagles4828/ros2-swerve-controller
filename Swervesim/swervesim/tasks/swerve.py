@@ -34,8 +34,9 @@ from omni.isaac.core.objects import DynamicSphere
 
 
 from omni.isaac.core.utils.prims import get_prim_at_path
-
 from omni.isaac.core.utils.torch.rotations import *
+from omni.isaac.core.prims import RigidPrimView
+
 
 import numpy as np
 import torch
@@ -87,20 +88,24 @@ class SwerveTask(RLTask):
 
         for key in self.rew_scales.keys():
             self.rew_scales[key] *= self.dt
+        
 
         self._num_envs = self._task_cfg["env"]["numEnvs"]
-        self._swerve_translation = torch.tensor([0.0, 0.0, 0.62])
+        self._swerve_translation = torch.tensor([0.0, 0.0, 0.0])
         self._env_spacing = self._task_cfg["env"]["envSpacing"]
-        self._num_observations = 13
-        self._num_actions = 6
+        self._num_observations = 32 
+        self._num_actions = 8
         self.swerve_position = torch.tensor([0,0,0])
         self._ball_position = torch.tensor([1,1,0])
+
+        RLTask.__init__(self, name, env)
+
+
         self.target_positions = torch.zeros((self._num_envs, 3), device=self._device, dtype=torch.float32)
         self.target_positions[:, 1] = 1
         self.force_indices = torch.tensor([0, 2], device=self._device)
         self.spinning_indices = torch.tensor([1, 3], device=self._device)
 
-        RLTask.__init__(self, name, env)
         return
 
     def set_up_scene(self, scene) -> None:
@@ -161,20 +166,24 @@ class SwerveTask(RLTask):
     def get_observations(self) -> dict:
         print("line 156")
         self.root_pos, self.root_rot = self._swerve.get_world_poses(clone=False)
-        self.root_velocities = self._copters.get_velocities(clone=False)
-
+        self.root_velocities = self._swerve.get_velocities(clone=False)
+        print("root velocities:"+str(self.root_velocities))
         root_positions = self.root_pos - self._env_pos
-        root_quats = self.root_rot
-        root_linvels = self.root_velocities[:, :3]
-        root_angvels = self.root_velocities[:, 3:]
+        print("root [positions]:"+str(self.root_velocities))
 
-        self.obs_buf[..., 0:3] = (self.target_positions - root_positions) / 3
-        self.obs_buf[..., 3:7] = root_quats
-        self.obs_buf[..., 7:10] = root_linvels / 2
-        self.obs_buf[..., 10:13] = root_angvels / math.pi
+        size = len(root_positions)
+        print("root length [positions]:"+str(size))
+
+        root_quats = self.root_rot
+        root_linvels = self.root_velocities[:, :size]
+        root_angvels = self.root_velocities[:, size:]
+        self.obs_buf[..., 0:size] = (self.target_positions - root_positions) / 3
+        self.obs_buf[..., size-1:size*2] = root_quats
+        self.obs_buf[..., (size*2-1):size*3] = root_linvels / 2
+        self.obs_buf[..., size*3-1:size*4] = root_angvels / math.pi
 
         observations = {
-            self._copters.name: {
+            self._swerve.name: {
                 "obs_buf": self.obs_buf
             }
         }
@@ -193,6 +202,7 @@ class SwerveTask(RLTask):
             self.set_targets(set_target_ids)
 
         self.actions[:] = actions.clone().to(self._device)
+        print(self.actions)
         current_targets = self.current_targets + self.action_scale * self.actions * self.dt 
         self.current_targets[:] = torch.clamp(current_targets, self.swerve_dof_lower_limits, self.swerve_dof_upper_limits)
         self._swerve.set_joint_position_targets(self.current_targets, indices)
@@ -200,47 +210,37 @@ class SwerveTask(RLTask):
     def reset_idx(self, env_ids):
         print("line 211")
         num_resets = len(env_ids)
-        # randomize DOF velocities
-        velocities = torch_rand_float(-0.1, 0.1, (num_resets, self._swerve.num_dof), device=self._device)
-        dof_pos = self.default_dof_pos[env_ids]
-        dof_vel = velocities
 
-        self.current_targets[env_ids] = dof_pos[:]
+        self.dof_pos[env_ids, 1] = torch_rand_float(-0.2, 0.2, (num_resets, 1), device=self._device).squeeze()
+        self.dof_pos[env_ids, 3] = torch_rand_float(-0.2, 0.2, (num_resets, 1), device=self._device).squeeze()
+        self.dof_vel[env_ids, :] = 0
 
-        root_vel = torch.zeros((num_resets, 6), device=self._device)
+        root_pos = self.initial_root_pos.clone()
+        root_pos[env_ids, 0] += torch_rand_float(-0.5, 0.5, (num_resets, 1), device=self._device).view(-1)
+        root_pos[env_ids, 1] += torch_rand_float(-0.5, 0.5, (num_resets, 1), device=self._device).view(-1)
+        root_pos[env_ids, 2] += torch_rand_float(-0.5, 0.5, (num_resets, 1), device=self._device).view(-1)
+        root_velocities = self.root_velocities.clone()
+        root_velocities[env_ids] = 0
 
         # apply resets
-        indices = env_ids.to(dtype=torch.int32)
-        self._swerve.set_joint_positions(dof_pos, indices)
-        self._swerve.set_joint_velocities(dof_vel, indices)
+        self._swerve.set_joint_positions(self.dof_pos[env_ids], indices=env_ids)
+        self._swerve.set_joint_velocities(self.dof_vel[env_ids], indices=env_ids)
 
-        self._swerve.set_world_poses(self.initial_root_pos[env_ids].clone(), self.initial_root_rot[env_ids].clone(), indices)
-        self._swerve.set_velocities(root_vel, indices)
-
-        self.commands_x[env_ids] = torch_rand_float(
-            self.command_x_range[0], self.command_x_range[1], (num_resets, 1), device=self._device
-        ).squeeze()
-        self.commands_y[env_ids] = torch_rand_float(
-            self.command_y_range[0], self.command_y_range[1], (num_resets, 1), device=self._device
-        ).squeeze()
-        self.commands_yaw[env_ids] = torch_rand_float(
-            self.command_yaw_range[0], self.command_yaw_range[1], (num_resets, 1), device=self._device
-        ).squeeze()
+        self._swerve.set_world_poses(root_pos[env_ids], self.initial_root_rot[env_ids].clone(), indices=env_ids)
+        self._swerve.set_velocities(root_velocities[env_ids], indices=env_ids)
 
         # bookkeeping
         self.reset_buf[env_ids] = 0
         self.progress_buf[env_ids] = 0
-        self.last_actions[env_ids] = 0.
-        self.last_dof_vel[env_ids] = 0.
         print("line 249")
 
     def post_reset(self):
         print("line 252")
         self.root_pos, self.root_rot = self._swerve.get_world_poses()
-        self.root_velocities = self._copters.get_velocities()
+        self.root_velocities = self._swerve.get_velocities()
 
-        self.dof_pos = self._copters.get_joint_positions()
-        self.dof_vel = self._copters.get_joint_velocities()
+        self.dof_pos = self._swerve.get_joint_positions()
+        self.dof_vel = self._swerve.get_joint_velocities()
 
         self.initial_ball_pos, self.initial_ball_rot = self._balls.get_world_poses()
         self.initial_root_pos, self.initial_root_rot = self.root_pos.clone(), self.root_rot.clone()
