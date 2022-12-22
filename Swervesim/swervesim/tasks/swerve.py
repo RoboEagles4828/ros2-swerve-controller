@@ -56,67 +56,73 @@ class SwerveTask(RLTask):
         self._task_cfg = sim_config.task_config
 
         # normalization
-        self.lin_vel_scale = 1.0
-        self.ang_vel_scale = 0.5
-        self.dof_pos_scale = 1
-        self.dof_vel_scale = 0.05
-        self.action_scale = 13.5
+        # self.lin_vel_scale = 1.0
+        # self.ang_vel_scale = 0.5
+        # self.dof_pos_scale = 1
+        # self.dof_vel_scale = 0.05
+        # self.action_scale = 13.5
+        self.wheel_limit = 10
+        self.axle_limit = 5
 
         # reward scales
-        self.rew_scales = {}
-        self.rew_scales["lin_vel_xy"] = self._task_cfg["env"]["learn"]["linearVelocityXYRewardScale"]
-        self.rew_scales["ang_vel_z"] = self._task_cfg["env"]["learn"]["angularVelocityZRewardScale"]
-        self.rew_scales["joint_acc"] = self._task_cfg["env"]["learn"]["jointAccRewardScale"]
-        self.rew_scales["action_rate"] = self._task_cfg["env"]["learn"]["actionRateRewardScale"]
-        self.rew_scales["cosmetic"] = self._task_cfg["env"]["learn"]["cosmeticRewardScale"]
+        # self.rew_scales = {}
+        # self.rew_scales["lin_vel_xy"] = self._task_cfg["env"]["learn"]["linearVelocityXYRewardScale"]
+        # self.rew_scales["ang_vel_z"] = self._task_cfg["env"]["learn"]["angularVelocityZRewardScale"]
+        # self.rew_scales["joint_acc"] = self._task_cfg["env"]["learn"]["jointAccRewardScale"]
+        # self.rew_scales["action_rate"] = self._task_cfg["env"]["learn"]["actionRateRewardScale"]
+        # self.rew_scales["cosmetic"] = self._task_cfg["env"]["learn"]["cosmeticRewardScale"]
 
-        # base init state
-        pos = self._task_cfg["env"]["baseInitState"]["pos"]
-        # rot = self._task_cfg["env"]["baseInitState"]["rot"]
-        v_lin = self._task_cfg["env"]["baseInitState"]["vLinear"]
-        v_ang = self._task_cfg["env"]["baseInitState"]["vAngular"]
-        state = pos + v_lin + v_ang
+        # # base init state
+        # pos = self._task_cfg["env"]["baseInitState"]["pos"]
+        # # rot = self._task_cfg["env"]["baseInitState"]["rot"]
+        # v_lin = self._task_cfg["env"]["baseInitState"]["vLinear"]
+        # v_ang = self._task_cfg["env"]["baseInitState"]["vAngular"]
+        # state = pos + v_lin + v_ang
 
-        self.base_init_state = state
+        #self.base_init_state = state
 
         # other
+
         self.dt = 1 / 60
         self.max_episode_length_s = self._task_cfg["env"]["learn"]["episodeLength_s"]
         self.max_episode_length = int(self.max_episode_length_s / self.dt + 0.5)
         self.Kp = self._task_cfg["env"]["control"]["stiffness"]
         self.Kd = self._task_cfg["env"]["control"]["damping"]
 
-        for key in self.rew_scales.keys():
-            self.rew_scales[key] *= self.dt
+        # for key in self.rew_scales.keys():
+        #     self.rew_scales[key] *= self.dt
         
 
         self._num_envs = self._task_cfg["env"]["numEnvs"]
         self._swerve_translation = torch.tensor([0.0, 0.0, 0.0])
         self._env_spacing = self._task_cfg["env"]["envSpacing"]
         self._num_observations = 32 
-        self._num_actions = 8
+        self._num_actions = 24
         self.swerve_position = torch.tensor([0,0,0])
         self._ball_position = torch.tensor([1,1,0])
 
         RLTask.__init__(self, name, env)
 
 
-        self.target_positions = torch.zeros((self._num_envs, 3), device=self._device, dtype=torch.float32)
+        self.target_positions = torch.zeros((self._num_envs, 3), device=self._device, dtype=torch.float32)# xyx of target position
         self.target_positions[:, 1] = 1
-        self.force_indices = torch.tensor([0, 2], device=self._device)
-        self.spinning_indices = torch.tensor([1, 3], device=self._device)
+        # self.force_indices = torch.tensor([0, 2], device=self._device)
+        # self.spinning_indices = torch.tensor([1, 3], device=self._device)
 
         return
 
-    def set_up_scene(self, scene) -> None:
+    #Adds all of the items to the stage
+    def set_up_scene(self, scene) -> None: 
         self.get_swerve()
         self.get_target()
         super().set_up_scene(scene)
         self._swerve = SwerveView(prim_paths_expr="/World/envs/.*/swerve", name="swerveview")
         self._balls = RigidPrimView(prim_paths_expr="/World/envs/.*/ball", name="targets_view", reset_xform_properties=False)
         scene.add(self._swerve)
-        scene.add(self._swerve._axle)
-        scene.add(self._swerve._wheel)
+        for axle in self._swerve._axle:
+            scene.add(axle)
+        for wheel in self._swerve._wheel:
+            scene.add(wheel)   
         scene.add(self._swerve._base)
         scene.add(self._balls)
         print("scene set up")
@@ -129,14 +135,14 @@ class SwerveTask(RLTask):
         self._sim_config.apply_articulation_settings("swerve", get_prim_at_path(swerve.prim_path), self._sim_config.parse_actor_config("swerve"))
         print("Line:122")
         # Configure joint properties
-        joint_paths = ["front_left_axle_link",
-                           "front_right_axle_link",
-                           "rear_left_axle_link",
-                           "rear_right_axle_link",
-                           "front_left_wheel_link",
-                           "front_right_wheel_link",
-                           "rear_left_wheel_link",
-                           "rear_right_wheel_link",
+        joint_paths = ["swerve_chassis_link/front_left_axle_joint",
+                           "swerve_chassis_link/front_right_axle_joint",
+                           "swerve_chassis_link/rear_left_axle_joint",
+                           "swerve_chassis_link/rear_right_axle_joint",
+                           "front_left_axle_link/front_left_wheel_joint",
+                           "front_right_axle_link/front_right_wheel_joint",
+                           "rear_left_axle_link/rear_left_wheel_joint",
+                           "rear_right_axle_link/rear_right_wheel_joint",
                         ]
         # for quadrant in ["LF", "LH", "RF", "RH"]:
         #     for component, abbrev in [("HIP", "H"), ("THIGH", "K")]:
@@ -144,12 +150,12 @@ class SwerveTask(RLTask):
         #     joint_paths.append(f"base/{quadrant}_HAA")
         
         for joint_path in joint_paths:
-            if("wheel" in joint_path):
-                print("set_wheel")
+            if("wheel_joint" in joint_path):
+                print("set_wheel:"+str(joint_path))
                 set_drive(f"{swerve.prim_path}/{joint_path}", "angular", "velocity", 0, 400, 40, 1000)
-            if("axle" in joint_path):
-                print("set_axle")
-                set_drive(f"{swerve.prim_path}/{joint_path}", "angular", "position", 0, 400, 40, 1000)
+            if("axle_joint" in joint_path):
+                print("set_axle:"+str(joint_path))
+                set_drive(f"{swerve.prim_path}/{joint_path}", "angular", "velocity", 0, 400, 40, 1000)
 
     def get_target(self):
         radius = 0.1
@@ -203,9 +209,27 @@ class SwerveTask(RLTask):
 
         self.actions[:] = actions.clone().to(self._device)
         print(self.actions)
-        current_targets = self.current_targets + self.action_scale * self.actions * self.dt 
-        self.current_targets[:] = torch.clamp(current_targets, self.swerve_dof_lower_limits, self.swerve_dof_upper_limits)
-        self._swerve.set_joint_position_targets(self.current_targets, indices)
+        front_left_wheel = torch.clamp(actions[:, 0:6] * self.wheel_limit, -self.wheel_limit, self.wheel_limit)
+        front_right_wheel = torch.clamp(actions[:, 6:12] * self.wheel_limit, -self.wheel_limit, self.wheel_limit)
+        rear_left_wheel = torch.clamp(actions[:, 12:18] * self.wheel_limit, -self.wheel_limit, self.wheel_limit)
+        rear_right_wheel = torch.clamp(actions[:, 18:24] * self.wheel_limit, -self.wheel_limit, self.wheel_limit)
+        front_left_axle = torch.clamp(actions[:, 24:30] * self.axle_limit, -self.axle_limit, self.axle_limit)
+        front_right_axle = torch.clamp(actions[:, 30:36] * self.axle_limit, -self.axle_limit, self.axle_limit)
+        rear_left_axle = torch.clamp(actions[:, 36:42] * self.axle_limit, -self.axle_limit, self.axle_limit)
+        rear_right_axle = torch.clamp(actions[:, 42:48] * self.axle_limit, -self.axle_limit, self.axle_limit)
+        # print(self._swerve.get_angular_velocities())
+        # 
+        # print(self._swerve.get_articulation_root_body())
+        print(self._swerve.dof_names)
+        print("initial:"+str(self._swerve._wheel[0].get_velocities()))
+        self._swerve._wheel[0].set_velocities(front_left_wheel)
+        print("end:"+str(self._swerve._wheel[0].get_velocities()))
+        print(front_left_wheel)
+        print(torch.arange(self._swerve.count, dtype=torch.int32, device=self._device))
+        # self._swerve.set_angular_velocity
+        print()
+        while(True):
+            x=10
         print("line 209")
     def reset_idx(self, env_ids):
         print("line 211")

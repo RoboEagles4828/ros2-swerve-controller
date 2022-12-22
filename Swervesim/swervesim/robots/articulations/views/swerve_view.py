@@ -46,8 +46,33 @@ class SwerveView(ArticulationView):
         )
         
         self._base = RigidPrimView(prim_paths_expr="/World/envs/.*/swerve/swerve_chassis_link", name="base_view", reset_xform_properties=False)
-        self._axle = RigidPrimView(prim_paths_expr="/World/envs/.*/swerve/.*_axle_link", name="axle_view", reset_xform_properties=False)
-        self._wheel = RigidPrimView(prim_paths_expr="/World/envs/.*/swerve/.*_wheel_link", name="wheel_view", reset_xform_properties=False)
+        # self._axle = RigidPrimView(prim_paths_expr="/World/envs/.*/swerve/.*_axle_link", name="axle_view", reset_xform_properties=False)
+        # self._wheel = RigidPrimView(prim_paths_expr="/World/envs/.*/swerve/.*_wheel_link", name="wheel_view", reset_xform_properties=False)
+
+        self._axle = [
+            RigidPrimView(prim_paths_expr="/World/envs/.*/swerve/front_left_axle_link", name="axle_view[0]", reset_xform_properties=False),
+            RigidPrimView(prim_paths_expr="/World/envs/.*/swerve/front_right_axle_link", name="axle_view[1]", reset_xform_properties=False),
+            RigidPrimView(prim_paths_expr="/World/envs/.*/swerve/rear_left_axle_link", name="axle_view[2]", reset_xform_properties=False),
+            RigidPrimView(prim_paths_expr="/World/envs/.*/swerve/rear_right_axle_link", name="axle_view[3]", reset_xform_properties=False)
+            ]
+        self._wheel = [
+            RigidPrimView(prim_paths_expr="/World/envs/.*/swerve/front_left_wheel_link", name="wheel_view[0]", reset_xform_properties=False),
+            RigidPrimView(prim_paths_expr="/World/envs/.*/swerve/front_right_wheel_link", name="wheel_view[1]", reset_xform_properties=False),
+            RigidPrimView(prim_paths_expr="/World/envs/.*/swerve/rear_left_wheel_link", name="wheel_view[2]", reset_xform_properties=False),
+            RigidPrimView(prim_paths_expr="/World/envs/.*/swerve/rear_right_wheel_link", name="wheel_view[3]", reset_xform_properties=False)
+            ]
+        # self._axle = [
+        #     RigidPrimView(prim_paths_expr="/World/envs/.*/swerve/swerve_chassis_link/front_left_axle_joint", name="axle_view[0]", reset_xform_properties=False),
+        #     RigidPrimView(prim_paths_expr="/World/envs/.*/swerve/swerve_chassis_link/front_right_axle_joint", name="axle_view[1]", reset_xform_properties=False),
+        #     RigidPrimView(prim_paths_expr="/World/envs/.*/swerve/swerve_chassis_link/rear_left_axle_joint", name="axle_view[2]", reset_xform_properties=False),
+        #     RigidPrimView(prim_paths_expr="/World/envs/.*/swerve/swerve_chassis_link/rear_right_axle_joint", name="axle_view[3]", reset_xform_properties=False)
+        #     ]
+        # self._wheel = [
+        #     RigidPrimView(prim_paths_expr="/World/envs/.*/swerve/front_left_axle_link/front_left_wheel_joint", name="wheel_view[0]", reset_xform_properties=False),
+        #     RigidPrimView(prim_paths_expr="/World/envs/.*/swerve/front_right_axle_link/front_right_wheel_joint", name="wheel_view[1]", reset_xform_properties=False),
+        #     RigidPrimView(prim_paths_expr="/World/envs/.*/swerve/rear_left_axle_link/rear_left_wheel_joint", name="wheel_view[2]", reset_xform_properties=False),
+        #     RigidPrimView(prim_paths_expr="/World/envs/.*/swerve/rear_right_axle_link/rear_right_wheel_joint", name="wheel_view[3]", reset_xform_properties=False)
+        #     ]
 
     # def get_knee_transforms(self):
     #     return self._knees.get_world_poses()
