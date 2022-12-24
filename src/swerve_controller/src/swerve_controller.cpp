@@ -190,6 +190,7 @@ controller_interface::return_type SwerveController::update(
 
   //optimization
 
+
   //front_left
   //RCLCPP_INFO(logger, "front_left_current_pos: %f, front_left_position %f", front_left_current_pos, front_left_position);
   if (abs(front_left_current_pos - front_left_position) > M_PI / 2) {
@@ -265,45 +266,61 @@ controller_interface::return_type SwerveController::update(
    //remmeber to comment this back in!
    //Has a 1 degree tolerance. Turns clockwise if less than, counter clockwise if greater than
   float turningspeed =5.0;
-  if(front_left_current_pos>front_left_position+(M_PI/180)||front_left_current_pos<front_left_position-(M_PI/180)){
+  if(front_left_current_pos>front_left_position+(M_PI/90)||front_left_current_pos<front_left_position-(M_PI/90)){
+    float setspeed = abs((front_left_position-front_left_current_pos))/(M_PI/18);
+    if(setspeed>turningspeed){
+      setspeed =turningspeed;
+    }
     if(front_left_position>front_left_current_pos){
-      front_left_handle_2_->set_velocity(turningspeed);
+      front_left_handle_2_->set_velocity(setspeed);
     }
     else{
-      front_left_handle_2_->set_velocity(-1*turningspeed);
+      front_left_handle_2_->set_velocity(-1*setspeed);
     } 
   }
   else{
     front_left_handle_2_->set_velocity(0.0);
   }
-  if(front_right_current_pos>front_right_position+(M_PI/180)||front_right_current_pos<front_right_position-(M_PI/180)){
+  if(front_right_current_pos>front_right_position+(M_PI/90)||front_right_current_pos<front_right_position-(M_PI/90)){
+    float setspeed = abs((front_right_position-front_right_current_pos))/(M_PI/18);
+    if(setspeed>turningspeed){
+      setspeed =turningspeed;
+    }
     if(front_right_position>front_right_current_pos){
-      front_right_handle_2_->set_velocity(turningspeed);
+      front_right_handle_2_->set_velocity(setspeed);
     }
     else{
-      front_right_handle_2_->set_velocity(-1*turningspeed);
+      front_right_handle_2_->set_velocity(-1*setspeed);
     } 
   }
   else{
     front_left_handle_2_->set_velocity(0.0);
   }
-  if(rear_left_current_pos>rear_left_position+(M_PI/180)||rear_left_current_pos<rear_left_position-(M_PI/180)){
+  if(rear_left_current_pos>rear_left_position+(M_PI/90)||rear_left_current_pos<rear_left_position-(M_PI/90)){
+    float setspeed = (abs(rear_left_position-rear_left_current_pos))/(M_PI/18);
+    if(setspeed>turningspeed){
+      setspeed =turningspeed;
+    }
     if(rear_left_position>rear_left_current_pos){
-      rear_left_handle_2_->set_velocity(turningspeed);
+      rear_left_handle_2_->set_velocity(setspeed);
     }
     else{
-      rear_left_handle_2_->set_velocity(-1*turningspeed);
+      rear_left_handle_2_->set_velocity(-1*setspeed);
     } 
   }
   else{
     front_left_handle_2_->set_velocity(0.0);
   }
-  if(rear_right_current_pos>rear_right_position+(M_PI/180)||rear_right_current_pos<rear_right_position-(M_PI/180)){
+  if(rear_right_current_pos>rear_right_position+(M_PI/90)||rear_right_current_pos<rear_right_position-(M_PI/90)){
+    float setspeed = (abs(rear_right_position-rear_right_current_pos))/(M_PI/18);
+    if(setspeed>turningspeed){
+      setspeed =turningspeed;
+    }
     if(rear_right_position>rear_right_current_pos){
-      rear_right_handle_2_->set_velocity(turningspeed);
+      rear_right_handle_2_->set_velocity(setspeed);
     }
     else{
-      rear_right_handle_2_->set_velocity(-1*turningspeed);
+      rear_right_handle_2_->set_velocity(-1*setspeed);
     } 
   }
   else{
