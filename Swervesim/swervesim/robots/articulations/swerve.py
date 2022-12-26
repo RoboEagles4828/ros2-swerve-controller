@@ -49,7 +49,7 @@ class Swerve(Robot):
         #self.prim_path = prim_path
         file_path = os.path.abspath(__file__)
         project_root_path = os.path.abspath(os.path.join(file_path, "../../../../../"))
-        root_path= os.path.join(project_root_path, "src/swerve_description/swerve/swerve2.usd")
+        root_path= os.path.join(project_root_path, "src/swerve_description/swerve/swerve.usd")
         print(str(root_path))
         print(prim_path)
         self._usd_path = root_path 

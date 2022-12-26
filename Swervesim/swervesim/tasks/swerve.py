@@ -85,7 +85,7 @@ class SwerveTask(RLTask):
 
         self.dt = 1 / 60
         self.max_episode_length_s = self._task_cfg["env"]["learn"]["episodeLength_s"]
-        self.max_episode_length = int(self.max_episode_length_s / self.dt + 0.5)
+        self._max_episode_length = int(self.max_episode_length_s / self.dt + 0.5)
         self.Kp = self._task_cfg["env"]["control"]["stiffness"]
         self.Kd = self._task_cfg["env"]["control"]["damping"]
 
@@ -96,8 +96,8 @@ class SwerveTask(RLTask):
         self._num_envs = self._task_cfg["env"]["numEnvs"]
         self._swerve_translation = torch.tensor([0.0, 0.0, 0.0])
         self._env_spacing = self._task_cfg["env"]["envSpacing"]
-        self._num_observations = 32 
-        self._num_actions = 24
+        self._num_observations = 13 
+        self._num_actions = 8
         self.swerve_position = torch.tensor([0,0,0])
         self._ball_position = torch.tensor([1,1,0])
 
@@ -144,18 +144,28 @@ class SwerveTask(RLTask):
                            "rear_left_axle_link/rear_left_wheel_joint",
                            "rear_right_axle_link/rear_right_wheel_joint",
                         ]
+        # joint_paths = ["front_left_axle_link",
+        #                    "front_right_axle_link",
+        #                    "rear_left_axle_link",
+        #                    "rear_right_axle_link",
+        #                    "front_left_wheel_link",
+        #                    "front_right_wheel_link",
+        #                    "rear_left_wheel_link",
+        #                    "rear_right_wheel_link",
+        #                 ]
         # for quadrant in ["LF", "LH", "RF", "RH"]:
         #     for component, abbrev in [("HIP", "H"), ("THIGH", "K")]:
         #         joint_paths.append(f"{quadrant}_{component}/{quadrant}_{abbrev}FE")
         #     joint_paths.append(f"base/{quadrant}_HAA")
         
         for joint_path in joint_paths:
+            #def set_drive(prim_path, drive_type, target_type, target_value, stiffness, damping, max_force) -> None:
             if("wheel_joint" in joint_path):
                 print("set_wheel:"+str(joint_path))
-                set_drive(f"{swerve.prim_path}/{joint_path}", "angular", "velocity", 0, 400, 40, 1000)
+                set_drive(f"{swerve.prim_path}/{joint_path}", "angular", "velocity", 0, 400, 0, 98)
             if("axle_joint" in joint_path):
                 print("set_axle:"+str(joint_path))
-                set_drive(f"{swerve.prim_path}/{joint_path}", "angular", "velocity", 0, 400, 40, 1000)
+                set_drive(f"{swerve.prim_path}/{joint_path}", "angular", "velocity", 0, 400, 0, 98)
 
     def get_target(self):
         radius = 0.1
@@ -177,16 +187,16 @@ class SwerveTask(RLTask):
         root_positions = self.root_pos - self._env_pos
         print("root [positions]:"+str(self.root_velocities))
 
-        size = len(root_positions)
+        size = 3
         print("root length [positions]:"+str(size))
 
         root_quats = self.root_rot
         root_linvels = self.root_velocities[:, :size]
         root_angvels = self.root_velocities[:, size:]
-        self.obs_buf[..., 0:size] = (self.target_positions - root_positions) / 3
-        self.obs_buf[..., size-1:size*2] = root_quats
-        self.obs_buf[..., (size*2-1):size*3] = root_linvels / 2
-        self.obs_buf[..., size*3-1:size*4] = root_angvels / math.pi
+        self.obs_buf[..., 0:3] = (self.target_positions - root_positions) / 3
+        self.obs_buf[..., 3:7] = root_quats
+        self.obs_buf[..., 7:10] = root_linvels / 2
+        self.obs_buf[..., 10:13] = root_angvels / math.pi
 
         observations = {
             self._swerve.name: {
@@ -209,14 +219,15 @@ class SwerveTask(RLTask):
 
         self.actions[:] = actions.clone().to(self._device)
         print(self.actions)
-        front_left_wheel = torch.clamp(actions[:, 0:6] * self.wheel_limit, -self.wheel_limit, self.wheel_limit)
-        front_right_wheel = torch.clamp(actions[:, 6:12] * self.wheel_limit, -self.wheel_limit, self.wheel_limit)
-        rear_left_wheel = torch.clamp(actions[:, 12:18] * self.wheel_limit, -self.wheel_limit, self.wheel_limit)
-        rear_right_wheel = torch.clamp(actions[:, 18:24] * self.wheel_limit, -self.wheel_limit, self.wheel_limit)
-        front_left_axle = torch.clamp(actions[:, 24:30] * self.axle_limit, -self.axle_limit, self.axle_limit)
-        front_right_axle = torch.clamp(actions[:, 30:36] * self.axle_limit, -self.axle_limit, self.axle_limit)
-        rear_left_axle = torch.clamp(actions[:, 36:42] * self.axle_limit, -self.axle_limit, self.axle_limit)
-        rear_right_axle = torch.clamp(actions[:, 42:48] * self.axle_limit, -self.axle_limit, self.axle_limit)
+        factor = 1
+        front_left_wheel = torch.clamp(actions[:, 0:factor] * self.wheel_limit, -self.wheel_limit, self.wheel_limit)
+        front_right_wheel = torch.clamp(actions[:, factor:factor*2] * self.wheel_limit, -self.wheel_limit, self.wheel_limit)
+        rear_left_wheel = torch.clamp(actions[:, factor*2:factor*3] * self.wheel_limit, -self.wheel_limit, self.wheel_limit)
+        rear_right_wheel = torch.clamp(actions[:, factor*3:factor*4] * self.wheel_limit, -self.wheel_limit, self.wheel_limit)
+        front_left_axle = torch.clamp(actions[:, factor*4:factor*5] * self.axle_limit, -self.axle_limit, self.axle_limit)
+        front_right_axle = torch.clamp(actions[:, factor*5:factor*6] * self.axle_limit, -self.axle_limit, self.axle_limit)
+        rear_left_axle = torch.clamp(actions[:, factor*6:factor*7] * self.axle_limit, -self.axle_limit, self.axle_limit)
+        rear_right_axle = torch.clamp(actions[:, factor*7:factor*8] * self.axle_limit, -self.axle_limit, self.axle_limit)
         # front_left_wheel = torch.clamp(actions[:, 0:3] * self.wheel_limit, -self.wheel_limit, self.wheel_limit)
         # front_right_wheel = torch.clamp(actions[:, 3:6] * self.wheel_limit, -self.wheel_limit, self.wheel_limit)
         # rear_left_wheel = torch.clamp(actions[:, 6:9] * self.wheel_limit, -self.wheel_limit, self.wheel_limit)
@@ -228,16 +239,15 @@ class SwerveTask(RLTask):
         # print(self._swerve.get_angular_velocities())
         # 
         # print(self._swerve.get_articulation_root_body())
+        set_vel = torch.cat((front_left_wheel,front_right_wheel, rear_left_wheel, rear_right_wheel, front_left_axle, front_right_axle, rear_left_axle, rear_right_axle),1)
         print(self._swerve.dof_names)
-        print("initial:"+str(self._swerve.get_velocities()))
-        self._swerve.set_velocities(front_left_wheel)
-        print("end:"+str(self._swerve.get_velocities()))
+        print("initial:"+str(self._swerve.get_joint_velocities()))
+        self._swerve.set_joint_velocities(set_vel)
+        print("end:"+str(self._swerve.get_joint_velocities()))
         print(front_left_wheel)
         print(torch.arange(self._swerve.count, dtype=torch.int32, device=self._device))
         # self._swerve.set_angular_velocity
         print()
-        while(True):
-            x=10
         print("line 209")
     def reset_idx(self, env_ids):
         print("line 211")
@@ -300,49 +310,32 @@ class SwerveTask(RLTask):
         envs_long = env_ids.long()
         # set target position randomly with x, y in (-1, 1) and z in (1, 2)
         self.target_positions[envs_long, 0:2] = torch.rand((num_sets, 2), device=self._device) * 2 - 1
-        self.target_positions[envs_long, 2] = torch.rand(num_sets, device=self._device) + 1
+        self.target_positions[envs_long, 2] = 0
 
         # shift the target up so it visually aligns better
         ball_pos = self.target_positions[envs_long] + self._env_pos[envs_long]
         ball_pos[:, 2] += 0.4
         self._balls.set_world_poses(ball_pos[:, 0:3], self.initial_ball_rot[envs_long].clone(), indices=env_ids)
     def calculate_metrics(self) -> None:
-        torso_position, torso_rotation = self._swerve.get_world_poses(clone=False)
-        root_velocities = self._swerve.get_velocities(clone=False)
-        dof_pos = self._swerve.get_joint_positions(clone=False)
-        dof_vel = self._swerve.get_joint_velocities(clone=False)
+        root_positions = self.root_pos - self._env_pos
+        root_quats = self.root_rot
+        root_angvels = self.root_velocities[:, 3:]
 
-        velocity = root_velocities[:, 0:3]
-        ang_velocity = root_velocities[:, 3:6]
-
-        base_lin_vel = quat_rotate_inverse(torso_rotation, velocity)
-        base_ang_vel = quat_rotate_inverse(torso_rotation, ang_velocity)
-
-        # velocity tracking reward
-        lin_vel_error = torch.sum(torch.square(self.commands[:, :2] - base_lin_vel[:, :2]), dim=1)
-        ang_vel_error = torch.square(self.commands[:, 2] - base_ang_vel[:, 2])
-        rew_lin_vel_xy = torch.exp(-lin_vel_error / 0.25) * self.rew_scales["lin_vel_xy"]
-        rew_ang_vel_z = torch.exp(-ang_vel_error / 0.25) * self.rew_scales["ang_vel_z"]
-
-        rew_lin_vel_z = torch.square(base_lin_vel[:, 2]) * self.rew_scales["lin_vel_z"]
-        rew_joint_acc = torch.sum(torch.square(self.last_dof_vel - dof_vel), dim=1) * self.rew_scales["joint_acc"]
-        rew_action_rate = torch.sum(torch.square(self.last_actions - self.actions), dim=1) * self.rew_scales["action_rate"]
-        rew_cosmetic = torch.sum(torch.abs(dof_pos[:, 0:4] - self.default_dof_pos[:, 0:4]), dim=1) * self.rew_scales["cosmetic"]
-
-        total_reward = rew_lin_vel_xy + rew_ang_vel_z + rew_joint_acc  + rew_action_rate + rew_cosmetic + rew_lin_vel_z
-        total_reward = torch.clip(total_reward, 0.0, None)
-
-        self.last_actions[:] = self.actions[:]
-        self.last_dof_vel[:] = dof_vel[:]
-
-        self.fallen_over = self._swerve.is_base_below_threshold(threshold=0.51, ground_heights=0.0)
-        total_reward[torch.nonzero(self.fallen_over)] = -1
-        self.rew_buf[:] = total_reward.detach()
+        # distance to target
+        target_dist = torch.sqrt(torch.square(self.target_positions - root_positions).sum(-1))
+        pos_reward = 1.0 / (1.0 + 2.5 * target_dist * target_dist)
+        self.target_dist = target_dist
+        self.root_positions = root_positions
+        self.rew_buf[:] = pos_reward
         print("line 309")
 
     def is_done(self) -> None:
         print("line 312")
-        # reset agents
-        time_out = self.progress_buf >= self.max_episode_length - 1
-        self.reset_buf[:] = time_out | self.fallen_over
+        ones = torch.ones_like(self.reset_buf)
+        die = torch.zeros_like(self.reset_buf)
+        die = torch.where(self.target_dist > 20.0, ones, die)
+        die = torch.where(self.root_positions[..., 2] < 0.5, ones, die)
+
+        # resets due to episode length
+        self.reset_buf[:] = torch.where(self.progress_buf >= self._max_episode_length - 1, ones, die)
         print("line 316")
