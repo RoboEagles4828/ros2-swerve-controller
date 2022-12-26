@@ -115,7 +115,9 @@ class SwerveTask(RLTask):
     def set_up_scene(self, scene) -> None: 
         self.get_swerve()
         self.get_target()
+        print("got swerve")
         super().set_up_scene(scene)
+        print("got scene")
         self._swerve = SwerveView(prim_paths_expr="/World/envs/.*/swerve", name="swerveview")
         self._balls = RigidPrimView(prim_paths_expr="/World/envs/.*/ball", name="targets_view", reset_xform_properties=False)
         scene.add(self._swerve)
@@ -125,15 +127,15 @@ class SwerveTask(RLTask):
             scene.add(wheel)   
         scene.add(self._swerve._base)
         scene.add(self._balls)
-        print("scene set up")
+        # print("scene set up")
 
         return
 
     def get_swerve(self):
         swerve = Swerve(self.default_zero_env_path + "/swerve", "swerve", self._swerve_translation)
-        print("Line:120")
+        # print("Line:120")
         self._sim_config.apply_articulation_settings("swerve", get_prim_at_path(swerve.prim_path), self._sim_config.parse_actor_config("swerve"))
-        print("Line:122")
+        # print("Line:122")
         # Configure joint properties
         joint_paths = ["swerve_chassis_link/front_left_axle_joint",
                            "swerve_chassis_link/front_right_axle_joint",
@@ -158,14 +160,14 @@ class SwerveTask(RLTask):
         #         joint_paths.append(f"{quadrant}_{component}/{quadrant}_{abbrev}FE")
         #     joint_paths.append(f"base/{quadrant}_HAA")
         
-        for joint_path in joint_paths:
-            #def set_drive(prim_path, drive_type, target_type, target_value, stiffness, damping, max_force) -> None:
-            if("wheel_joint" in joint_path):
-                print("set_wheel:"+str(joint_path))
-                set_drive(f"{swerve.prim_path}/{joint_path}", "angular", "velocity", 0, 400, 0, 98)
-            if("axle_joint" in joint_path):
-                print("set_axle:"+str(joint_path))
-                set_drive(f"{swerve.prim_path}/{joint_path}", "angular", "velocity", 0, 400, 0, 98)
+        # for joint_path in joint_paths:
+        #     #def set_drive(prim_path, drive_type, target_type, target_value, stiffness, damping, max_force) -> None:
+        #     if("wheel_joint" in joint_path):
+        #         print("set_wheel:"+str(joint_path))
+        #         set_drive(f"{swerve.prim_path}/{joint_path}", "angular", "velocity", 0, 400, 0, 98)
+        #     if("axle_joint" in joint_path):
+        #         print("set_axle:"+str(joint_path))
+        #         set_drive(f"{swerve.prim_path}/{joint_path}", "angular", "velocity", 0, 400, 0, 98)
 
     def get_target(self):
         radius = 0.1
@@ -180,15 +182,15 @@ class SwerveTask(RLTask):
         self._sim_config.apply_articulation_settings("ball", get_prim_at_path(ball.prim_path), self._sim_config.parse_actor_config("ball"))
         ball.set_collision_enabled(True)
     def get_observations(self) -> dict:
-        print("line 156")
+        # print("line 156")
         self.root_pos, self.root_rot = self._swerve.get_world_poses(clone=False)
         self.root_velocities = self._swerve.get_velocities(clone=False)
-        print("root velocities:"+str(self.root_velocities))
+        # print("root velocities:"+str(self.root_velocities))
         root_positions = self.root_pos - self._env_pos
-        print("root [positions]:"+str(self.root_velocities))
+        # print("root [positions]:"+str(self.root_velocities))
 
         size = 3
-        print("root length [positions]:"+str(size))
+        #print("root length [positions]:"+str(size))
 
         root_quats = self.root_rot
         root_linvels = self.root_velocities[:, :size]
@@ -203,11 +205,11 @@ class SwerveTask(RLTask):
                 "obs_buf": self.obs_buf
             }
         }
-        print("line 195")
+        # print("line 195")
         return observations
 
     def pre_physics_step(self, actions) -> None:
-        print("line 203")
+        # print("line 203")
 
         reset_env_ids = self.reset_buf.nonzero(as_tuple=False).squeeze(-1)
         if len(reset_env_ids) > 0:
@@ -218,7 +220,7 @@ class SwerveTask(RLTask):
             self.set_targets(set_target_ids)
 
         self.actions[:] = actions.clone().to(self._device)
-        print(self.actions)
+        # print(self.actions)
         factor = 1
         front_left_wheel = torch.clamp(actions[:, 0:factor] * self.wheel_limit, -self.wheel_limit, self.wheel_limit)
         front_right_wheel = torch.clamp(actions[:, factor:factor*2] * self.wheel_limit, -self.wheel_limit, self.wheel_limit)
@@ -240,17 +242,17 @@ class SwerveTask(RLTask):
         # 
         # print(self._swerve.get_articulation_root_body())
         set_vel = torch.cat((front_left_wheel,front_right_wheel, rear_left_wheel, rear_right_wheel, front_left_axle, front_right_axle, rear_left_axle, rear_right_axle),1)
-        print(self._swerve.dof_names)
-        print("initial:"+str(self._swerve.get_joint_velocities()))
+        # print(self._swerve.dof_names)
+        # print("initial:"+str(self._swerve.get_joint_velocities()))
         self._swerve.set_joint_velocities(set_vel)
-        print("end:"+str(self._swerve.get_joint_velocities()))
-        print(front_left_wheel)
-        print(torch.arange(self._swerve.count, dtype=torch.int32, device=self._device))
+        # print("end:"+str(self._swerve.get_joint_velocities()))
+        # print(front_left_wheel)
+        # print(torch.arange(self._swerve.count, dtype=torch.int32, device=self._device))
         # self._swerve.set_angular_velocity
-        print()
-        print("line 209")
+        # print()
+        # print("line 209")
     def reset_idx(self, env_ids):
-        print("line 211")
+        # print("line 211")
         num_resets = len(env_ids)
 
         self.dof_pos[env_ids, 1] = torch_rand_float(-0.2, 0.2, (num_resets, 1), device=self._device).squeeze()
@@ -274,10 +276,10 @@ class SwerveTask(RLTask):
         # bookkeeping
         self.reset_buf[env_ids] = 0
         self.progress_buf[env_ids] = 0
-        print("line 249")
+        # print("line 249")
 
     def post_reset(self):
-        print("line 252")
+        # print("line 252")
         self.root_pos, self.root_rot = self._swerve.get_world_poses()
         self.root_velocities = self._swerve.get_velocities()
 
@@ -290,9 +292,6 @@ class SwerveTask(RLTask):
 
         # initialize some data used later on
         self.extras = {}
-        self.gravity_vec = torch.tensor([0.0, 0.0, -1.0], device=self._device).repeat(
-            (self._num_envs, 1)
-        )
         self.actions = torch.zeros(
             self._num_envs, self.num_actions, dtype=torch.float, device=self._device, requires_grad=False
         )
@@ -304,17 +303,17 @@ class SwerveTask(RLTask):
         # randomize all envs
         indices = torch.arange(self._swerve.count, dtype=torch.int64, device=self._device)
         self.reset_idx(indices)
-        print("line 276")
+        # print("line 276")
     def set_targets(self, env_ids):
         num_sets = len(env_ids)
         envs_long = env_ids.long()
         # set target position randomly with x, y in (-1, 1) and z in (1, 2)
         self.target_positions[envs_long, 0:2] = torch.rand((num_sets, 2), device=self._device) * 2 - 1
-        self.target_positions[envs_long, 2] = 0
+        self.target_positions[envs_long, 2] = 0.2
+        print(self.target_positions)
 
         # shift the target up so it visually aligns better
         ball_pos = self.target_positions[envs_long] + self._env_pos[envs_long]
-        ball_pos[:, 2] += 0.4
         self._balls.set_world_poses(ball_pos[:, 0:3], self.initial_ball_rot[envs_long].clone(), indices=env_ids)
     def calculate_metrics(self) -> None:
         root_positions = self.root_pos - self._env_pos
@@ -327,15 +326,15 @@ class SwerveTask(RLTask):
         self.target_dist = target_dist
         self.root_positions = root_positions
         self.rew_buf[:] = pos_reward
-        print("line 309")
+        # print("line 309")
 
     def is_done(self) -> None:
-        print("line 312")
+        # print("line 312")
         ones = torch.ones_like(self.reset_buf)
         die = torch.zeros_like(self.reset_buf)
         die = torch.where(self.target_dist > 20.0, ones, die)
-        die = torch.where(self.root_positions[..., 2] < 0.5, ones, die)
+        #die = torch.where(self.root_positions[..., 2] < 0.5, ones, die)
 
         # resets due to episode length
         self.reset_buf[:] = torch.where(self.progress_buf >= self._max_episode_length - 1, ones, die)
-        print("line 316")
+        # print("line 316")
