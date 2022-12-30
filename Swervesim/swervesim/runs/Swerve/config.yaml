@@ -2,8 +2,8 @@ task:
   name: Swerve
   physics_engine: ${..physics_engine}
   env:
-    numEnvs: 36
-    envSpacing: 4.0
+    numEnvs: 324
+    envSpacing: 20.0
     resetDist: 3.0
     clipObservations: 5.0
     clipActions: 1.0
@@ -30,14 +30,7 @@ task:
       stiffness: 85.0
       damping: 2.0
       actionScale: 13.5
-    learn:
-      linearVelocityXYRewardScale: 1.0
-      angularVelocityZRewardScale: 0.5
-      linearVelocityZRewardScale: -0.03
-      jointAccRewardScale: -0.0003
-      actionRateRewardScale: -0.006
-      cosmeticRewardScale: -0.06
-      episodeLength_s: 50
+    episodeLength_s: 50
   sim:
     dt: 0.0083
     use_gpu_pipeline: ${eq:${...pipeline},"gpu"}
@@ -49,8 +42,6 @@ task:
     add_distant_light: true
     use_flatcache: true
     enable_scene_query_support: false
-    enable_cameras: false
-    enable_lidar: false
     default_physics_material:
       static_friction: 1.0
       dynamic_friction: 1.0
@@ -84,8 +75,7 @@ task:
       fixed_base: false
       enable_self_collisions: false
       enable_gyroscopic_forces: true
-      solver_position_iteration_count: 4
-      solver_velocity_iteration_count: 4
+      solver_velocity_iteration_count: 8
       sleep_threshold: 0.005
       stabilization_threshold: 0.001
       density: -1
@@ -145,7 +135,7 @@ train:
       lr_schedule: adaptive
       kl_threshold: 0.008
       score_to_win: 20000
-      max_epochs: ${resolve_default:100,${....max_iterations}}
+      max_epochs: 10000
       save_best_after: 50
       save_frequency: 25
       grad_norm: 1.0
