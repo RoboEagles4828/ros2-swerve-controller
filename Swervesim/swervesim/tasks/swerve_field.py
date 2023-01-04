@@ -43,7 +43,7 @@ import torch
 import math
 
 
-class SwerveTask(RLTask):
+class Swerve_with_Field_Task(RLTask):
     def __init__(
         self,
         name,

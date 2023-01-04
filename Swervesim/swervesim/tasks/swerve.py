@@ -149,7 +149,7 @@ class SwerveTask(RLTask):
         self.obs_buf[..., 7:10] = root_linvels / 2
         self.obs_buf[..., 10:13] = root_angvels / math.pi
         self.obs_buf[..., 13:21] = self.joint_velocities 
-        self.obs_buf[..., 21:29] = self.joint_velocities 
+        self.obs_buf[..., 21:29] = self.joint_positions
         # Should not exceed observation ssize declared earlier
         # An observation is created for each swerve in each environment
         observations = {
