@@ -155,7 +155,7 @@ namespace swerve_controller
     double &linear_x_cmd = command.twist.linear.x;
     double &linear_y_cmd = command.twist.linear.y;
     double &angular_cmd = command.twist.angular.z;
-    if (linear_x_cmd< 0.5 && linear_y_cmd< 0.5 && angular_cmd < 0.5)
+    if (abs(linear_x_cmd)< 0.5 && abs(linear_y_cmd)< 0.5)
     {
       RCLCPP_INFO(logger, "yes");
       front_left_handle_->set_velocity(0.0);
