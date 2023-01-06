@@ -57,8 +57,7 @@ class Swerve_Kinematics_Task(RLTask):
         self._task_cfg = sim_config.task_config
 
         # limits max velocity of wheels and axles
-        self.wheel_limit = 50
-        self.axle_limit = 5
+        self.velocity_limit = 10
 
         self.dt = 1 / 60
         self.max_episode_length_s = self._task_cfg["env"]["episodeLength_s"]
@@ -178,12 +177,13 @@ class Swerve_Kinematics_Task(RLTask):
         self.actions[:] = actions.clone().to(self._device)
         # Sets velocity for each wheel and axle within the velocity limits
         linear_x_cmd = torch.clamp(
-            actions[:, 0:1] * self.wheel_limit, -self.wheel_limit, self.wheel_limit)
+            actions[:, 0:1] * self.velocity_limit, -self.velocity_limit, self.velocity_limit)
         linear_y_cmd = torch.clamp(
-            actions[:, 1:2] * self.wheel_limit, -self.wheel_limit, self.wheel_limit)
+            actions[:, 1:2] * self.velocity_limit, -self.velocity_limit, self.velocity_limit)
         angular_cmd = torch.clamp(
-            actions[:, 2:3] * self.wheel_limit, -self.wheel_limit, self.wheel_limit)
-
+            actions[:, 2:3] * self.velocity_limit, -self.velocity_limit, self.velocity_limit)
+        # print("linear:",linear_x_cmd)
+        # print("angular:",linear_y_cmd)
         x_offset = 0.7366
         radius = 0.1016
         actionlist = []
@@ -200,11 +200,12 @@ class Swerve_Kinematics_Task(RLTask):
             d = linear_y_cmd[i] + angular_cmd[i] * x_offset / 2
 
         #   get current wheel positions
-            front_left_current_pos = self._swerve.get_joint_positions()[i][0]
-            front_right_current_pos = self._swerve.get_joint_positions()[i][1]
-            rear_left_current_pos = self._swerve.get_joint_positions()[i][2]
-            rear_right_current_pos = self._swerve.get_joint_positions()[i][3]
-
+            front_left_current_pos = ((self._swerve.get_joint_positions()[i][0] *180/math.pi)%180) * (math.pi/180)
+            front_right_current_pos = ((self._swerve.get_joint_positions()[i][1]*180/math.pi)%180) * (math.pi/180)
+            rear_left_current_pos = ((self._swerve.get_joint_positions()[i][2]*180/math.pi)%180) * (math.pi/180)
+            rear_right_current_pos = ((self._swerve.get_joint_positions()[i][3]*180/math.pi)%180) * (math.pi/180)
+            if(i==1):
+                print(f"front_left_current:{front_left_current_pos}")
             m = math.pow(b, 2)
             n = math.pow(d, 2)
             x = (math.sqrt(math.pow(b, 2) + math.pow(d, 2)))
@@ -224,25 +225,25 @@ class Swerve_Kinematics_Task(RLTask):
             rear_right_position = math.atan2(a, c)
 
 #   optimization
-            while (abs( front_left_current_pos - front_left_position) > math.pi / 2):
+            if(abs( front_left_current_pos - front_left_position) > math.pi / 2):
                 if(front_left_position>front_left_current_pos):
                     front_left_position -= math.pi
                 else:
                     front_left_position += math.pi
                 front_left_velocity *= -1
-            while (abs(front_right_current_pos - front_right_position) > math.pi / 2):
+            if (abs(front_right_current_pos - front_right_position) > math.pi / 2):
                 if(front_right_position>front_right_current_pos):
                     front_right_position -= math.pi
                 else:
                     front_right_position += math.pi
                 front_right_velocity *= -1
-            while (abs(rear_left_current_pos - rear_left_position) > math.pi / 2):
+            if (abs(rear_left_current_pos - rear_left_position) > math.pi / 2):
                 if(rear_left_position>rear_left_current_pos):
                     rear_left_position -= math.pi
                 else:
                     rear_left_position += math.pi
                 rear_left_velocity *= -1
-            while (abs(rear_right_current_pos - rear_right_position) > math.pi / 2):
+            if (abs(rear_right_current_pos - rear_right_position) > math.pi / 2):
                 if(rear_right_position>rear_right_current_pos):
                     rear_right_position -= math.pi
                 else:
@@ -292,6 +293,8 @@ class Swerve_Kinematics_Task(RLTask):
     # Set Wheel Positions
    # remmeber to comment this back in!
    # Has a 1 degree tolerance. Turns clockwise if less than, counter clockwise if greater than
+            if(i==1):
+                print(f"front_left_position:{front_left_position}")
             turningspeed = 5.0
             if (front_left_current_pos > front_left_position+(math.pi/90) or front_left_current_pos < front_left_position-(math.pi/90)):
                 setspeed = abs(
@@ -350,19 +353,32 @@ class Swerve_Kinematics_Task(RLTask):
 
             else:
                 action.append(0.0)
-            action.append(front_left_velocity)
-            action.append(front_right_velocity)
-            action.append(rear_left_velocity)
-            action.append(rear_right_velocity)
+            
+            sortlist = []
+            sortlist.append(front_left_velocity)
+            sortlist.append(front_right_velocity)
+            sortlist.append(rear_left_velocity)
+            sortlist.append(rear_right_velocity)
+            maxs = abs(max(sortlist, key=abs))
+            if(maxs<0.5):
+                for num in sortlist:
+                    action.append(0.0)
+            else:
+                for num in sortlist:
+                    if(maxs != 0 and abs(maxs)>10):
+                        num = (num/abs(maxs))*10 #scales down velocty to max of 10 radians
+                        #print(num)
+                    action.append(num)
+            # print(action)
             actionlist.append(action)
         # Sets robots velocities
         self._swerve.set_joint_velocities(torch.FloatTensor(actionlist))
 
-    def simplifiy_angle(self,current_pos, pos, velocity):
-        while (abs(current_pos - pos) > math.pi / 2):
-            pos -= math.pi
-            velocity *= -1
-        return pos, velocity
+    # def simplifiy_angle(self,current_pos, pos, velocity):
+    #     while (abs(current_pos - pos) > math.pi / 2):
+    #         pos -= math.pi
+    #         velocity *= -1
+    #     return pos, velocity
             
     def reset_idx(self, env_ids):
         # print("line 211")
@@ -457,7 +473,7 @@ class Swerve_Kinematics_Task(RLTask):
         for i in range(len(self.root_position_reward)):
             self.root_position_reward[i] = sum(root_positions[i][0:3])
 
-        self.rew_buf[:] = pos_reward
+        self.rew_buf[:] = self.root_position_reward*pos_reward
 
     def is_done(self) -> None:
         # print("line 312")
