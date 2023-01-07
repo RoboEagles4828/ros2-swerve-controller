@@ -25,7 +25,7 @@
     "initializeCommand": "xhost +",
     "mounts": [
         // X11
-        "source=${localEnv:HOME}/.Xauthority,target=/home/vscode/.Xauthority,type=bind",
+        "source=${localEnv:XAUTHORITY},target=/home/vscode/.Xauthority,type=bind",
         // Vulkan
         "source=/usr/share/glvnd/egl_vendor.d/10_nvidia.json,target=/usr/share/glvnd/egl_vendor.d/10_nvidia.json,type=bind,consistency=cached",
         "source=/usr/share/vulkan/icd.d/nvidia_icd.json,target=/usr/share/vulkan/icd.d/nvidia_icd.json,type=bind,consistency=cached",
