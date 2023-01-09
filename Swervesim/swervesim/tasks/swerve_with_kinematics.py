@@ -200,10 +200,10 @@ class Swerve_Kinematics_Task(RLTask):
             d = linear_y_cmd[i] + angular_cmd[i] * x_offset / 2
 
         #   get current wheel positions
-            front_left_current_pos = ((self._swerve.get_joint_positions()[i][0] *180/math.pi)%180) * (math.pi/180)
-            front_right_current_pos = ((self._swerve.get_joint_positions()[i][1]*180/math.pi)%180) * (math.pi/180)
-            rear_left_current_pos = ((self._swerve.get_joint_positions()[i][2]*180/math.pi)%180) * (math.pi/180)
-            rear_right_current_pos = ((self._swerve.get_joint_positions()[i][3]*180/math.pi)%180) * (math.pi/180)
+            front_left_current_pos = ((self._swerve.get_joint_positions()[i][0] ))#*180/math.pi)%180) * (math.pi/180)
+            front_right_current_pos = ((self._swerve.get_joint_positions()[i][1]))#*180/math.pi)%180) * (math.pi/180)
+            rear_left_current_pos = ((self._swerve.get_joint_positions()[i][2]))#*180/math.pi)%180) * (math.pi/180)
+            rear_right_current_pos = ((self._swerve.get_joint_positions()[i][3]))#*180/math.pi)%180) * (math.pi/180)
             if(i==1):
                 print(f"front_left_current:{front_left_current_pos}")
             m = math.pow(b, 2)
@@ -225,25 +225,25 @@ class Swerve_Kinematics_Task(RLTask):
             rear_right_position = math.atan2(a, c)
 
 #   optimization
-            if(abs( front_left_current_pos - front_left_position) > math.pi / 2):
+            while(abs( front_left_current_pos - front_left_position) > math.pi / 2):
                 if(front_left_position>front_left_current_pos):
                     front_left_position -= math.pi
                 else:
                     front_left_position += math.pi
                 front_left_velocity *= -1
-            if (abs(front_right_current_pos - front_right_position) > math.pi / 2):
+            while(abs(front_right_current_pos - front_right_position) > math.pi / 2):
                 if(front_right_position>front_right_current_pos):
                     front_right_position -= math.pi
                 else:
                     front_right_position += math.pi
                 front_right_velocity *= -1
-            if (abs(rear_left_current_pos - rear_left_position) > math.pi / 2):
+            while (abs(rear_left_current_pos - rear_left_position) > math.pi / 2):
                 if(rear_left_position>rear_left_current_pos):
                     rear_left_position -= math.pi
                 else:
                     rear_left_position += math.pi
                 rear_left_velocity *= -1
-            if (abs(rear_right_current_pos - rear_right_position) > math.pi / 2):
+            while (abs(rear_right_current_pos - rear_right_position) > math.pi / 2):
                 if(rear_right_position>rear_right_current_pos):
                     rear_right_position -= math.pi
                 else:
@@ -304,7 +304,7 @@ class Swerve_Kinematics_Task(RLTask):
                 if (front_left_position > front_left_current_pos):
                     action.append(setspeed)
                 else:
-                    action.append(setspeed)
+                    action.append(setspeed*-1)
 
             else:
                 action.append(0.0)
@@ -319,7 +319,7 @@ class Swerve_Kinematics_Task(RLTask):
                     action.append(setspeed)
 
                 else:
-                    action.append(setspeed)
+                    action.append(setspeed*-1)
 
             else:
                 action.append(0.0)
@@ -334,7 +334,7 @@ class Swerve_Kinematics_Task(RLTask):
                     action.append(setspeed)
 
                 else:
-                    action.append(setspeed)
+                    action.append(setspeed*-1)
 
             else:
                 action.append(0.0)
@@ -349,7 +349,7 @@ class Swerve_Kinematics_Task(RLTask):
                     action.append(setspeed)
 
                 else:
-                    action.append(setspeed)
+                    action.append(setspeed*-1)
 
             else:
                 action.append(0.0)
