@@ -182,8 +182,6 @@ class Swerve_Kinematics_Task(RLTask):
             actions[:, 1:2] * self.velocity_limit, -self.velocity_limit, self.velocity_limit)
         angular_cmd = torch.clamp(
             actions[:, 2:3] * self.velocity_limit, -self.velocity_limit, self.velocity_limit)
-        # print("linear:",linear_x_cmd)
-        # print("angular:",linear_y_cmd)
         x_offset = 0.7366
         radius = 0.1016
         actionlist = []
@@ -200,16 +198,16 @@ class Swerve_Kinematics_Task(RLTask):
             d = linear_y_cmd[i] + angular_cmd[i] * x_offset / 2
 
         #   get current wheel positions
-            front_left_current_pos = ((self._swerve.get_joint_positions()[i][0] ))#*180/math.pi)%180) * (math.pi/180)
-            front_right_current_pos = ((self._swerve.get_joint_positions()[i][1]))#*180/math.pi)%180) * (math.pi/180)
-            rear_left_current_pos = ((self._swerve.get_joint_positions()[i][2]))#*180/math.pi)%180) * (math.pi/180)
-            rear_right_current_pos = ((self._swerve.get_joint_positions()[i][3]))#*180/math.pi)%180) * (math.pi/180)
-            if(i==1):
-                print(f"front_left_current:{front_left_current_pos}")
-            m = math.pow(b, 2)
-            n = math.pow(d, 2)
-            x = (math.sqrt(math.pow(b, 2) + math.pow(d, 2)))
-            y = 1/(radius*math.pi)
+            
+            front_left_current_pos = (
+                (self._swerve.get_joint_positions()[i][0]))
+            front_right_current_pos = (
+                (self._swerve.get_joint_positions()[i][1]))
+            rear_left_current_pos = (
+                (self._swerve.get_joint_positions()[i][2]))
+            rear_right_current_pos = (
+                (self._swerve.get_joint_positions()[i][3]))
+ 
             front_left_velocity = (
                 math.sqrt(math.pow(b, 2) + math.pow(d, 2)))*(1/(radius*math.pi))
             front_right_velocity = (
@@ -224,162 +222,45 @@ class Swerve_Kinematics_Task(RLTask):
             rear_left_position = math.atan2(a, d)
             rear_right_position = math.atan2(a, c)
 
-#   optimization
-            while(abs( front_left_current_pos - front_left_position) > math.pi / 2):
-                if(front_left_position>front_left_current_pos):
-                    front_left_position -= math.pi
-                else:
-                    front_left_position += math.pi
-                front_left_velocity *= -1
-            while(abs(front_right_current_pos - front_right_position) > math.pi / 2):
-                if(front_right_position>front_right_current_pos):
-                    front_right_position -= math.pi
-                else:
-                    front_right_position += math.pi
-                front_right_velocity *= -1
-            while (abs(rear_left_current_pos - rear_left_position) > math.pi / 2):
-                if(rear_left_position>rear_left_current_pos):
-                    rear_left_position -= math.pi
-                else:
-                    rear_left_position += math.pi
-                rear_left_velocity *= -1
-            while (abs(rear_right_current_pos - rear_right_position) > math.pi / 2):
-                if(rear_right_position>rear_right_current_pos):
-                    rear_right_position -= math.pi
-                else:
-                    rear_right_position += math.pi
-                rear_right_velocity *= -1
-#   # front_left
-#             if (abs(front_left_current_pos - front_left_position) > math.pi / 2):
-#                 front_left_position -= math.pi
-#                 # convert to degrees
-#                 front_left_position = ((180 / math.pi) * front_left_position)
-#                 # keep it in -90 to 90 scope
-#                 front_left_position = (
-#                     (int)(front_left_position) + 90) % 180 - 90
-#                 # convert back to radians
-#                 front_left_velocity *= -1
-# # front_right
-#             if (abs(front_right_current_pos - front_right_position) > math.pi / 2):
-#                 front_right_position -= math.pi
-#                 # convert to degrees
-#                 front_right_position = ((180 / math.pi) * front_right_position)
-#                 # keep it in -90 to 90 scope
-#                 front_right_position = (
-#                     (int)(front_right_position) + 90) % 180 - 90
-#                 # convert back to radians
-#                 front_right_velocity *= -1
-# # rear_left
-#             if (abs(rear_left_current_pos - rear_left_position) > math.pi / 2):
-#                 rear_left_position -= math.pi
-#                 # convert to degrees
-#                 rear_left_position = ((180 / math.pi) * rear_left_position)
-#                 # keep it in -90 to 90 scope
-#                 rear_left_position = (
-#                     (int)(rear_left_position) + 90) % 180 - 90
-#                 # convert back to radians
-#                 rear_left_velocity *= -1
-# # rear right
-#             if (abs(rear_right_current_pos - rear_right_position) > math.pi / 2):
-#                 rear_right_position -= math.pi
-#                 # convert to degrees
-#                 rear_right_position = ((180 / math.pi) * rear_right_position)
-#                 # keep it in -90 to 90 scope
-#                 rear_right_position = (
-#                     (int)(rear_right_position) + 90) % 180 - 90
-#                 # convert back to radians
-#                 rear_right_velocity *= -1
 
-    # Set Wheel Positions
-   # remmeber to comment this back in!
-   # Has a 1 degree tolerance. Turns clockwise if less than, counter clockwise if greater than
-            if(i==1):
-                print(f"front_left_position:{front_left_position}")
-            turningspeed = 5.0
-            if (front_left_current_pos > front_left_position+(math.pi/90) or front_left_current_pos < front_left_position-(math.pi/90)):
-                setspeed = abs(
-                    (front_left_position-front_left_current_pos))/(math.pi/18)
-                if (setspeed > turningspeed):
-                    setspeed = turningspeed
-                if (front_left_position > front_left_current_pos):
-                    action.append(setspeed)
-                else:
-                    action.append(setspeed*-1)
-
-            else:
-                action.append(0.0)
-
-            if (front_right_current_pos > front_right_position+(math.pi/90) or front_right_current_pos < front_right_position-(math.pi/90)):
-                setspeed = abs(
-                    (front_right_position-front_right_current_pos))/(math.pi/18)
-                if (setspeed > turningspeed):
-                    setspeed = turningspeed
-
-                if (front_right_position > front_right_current_pos):
-                    action.append(setspeed)
-
-                else:
-                    action.append(setspeed*-1)
-
-            else:
-                action.append(0.0)
-
-            if (rear_left_current_pos > rear_left_position+(math.pi/90) or rear_left_current_pos < rear_left_position-(math.pi/90)):
-                setspeed = abs(
-                    (rear_left_position-rear_left_current_pos))/(math.pi/18)
-                if (setspeed > turningspeed):
-                    setspeed = turningspeed
-
-                if (rear_left_position > rear_left_current_pos):
-                    action.append(setspeed)
-
-                else:
-                    action.append(setspeed*-1)
-
-            else:
-                action.append(0.0)
-
-            if (rear_right_current_pos > rear_right_position+(math.pi/90) or rear_right_current_pos < rear_right_position-(math.pi/90)):
-                setspeed = abs(
-                    (rear_right_position-rear_right_current_pos))/(math.pi/18)
-                if (setspeed > turningspeed):
-                    setspeed = turningspeed
-
-                if (rear_right_position > rear_right_current_pos):
-                    action.append(setspeed)
-
-                else:
-                    action.append(setspeed*-1)
-
-            else:
-                action.append(0.0)
+        #   optimization
             
-            sortlist = []
-            sortlist.append(front_left_velocity)
-            sortlist.append(front_right_velocity)
-            sortlist.append(rear_left_velocity)
-            sortlist.append(rear_right_velocity)
+            front_left_position, front_left_velocity = simplifiy_angle(
+                front_left_current_pos, front_left_position, front_left_velocity)
+            front_right_position, front_right_velocity = simplifiy_angle(
+                front_right_current_pos, front_right_position, front_right_velocity)
+            rear_left_position, rear_left_velocity = simplifiy_angle(
+                rear_left_current_pos, rear_left_position, rear_left_velocity)
+            rear_right_position, rear_right_velocity = simplifiy_angle(
+                rear_right_current_pos, rear_right_position, rear_right_velocity)
+
+        #   Set Wheel Positions
+        #   Has a 1 degree tolerance. Turns clockwise if less than, counter clockwise if greater than
+            if (i == 1):
+                print(f"front_left_position:{front_left_position}")
+                print(f"rear_left_position:{rear_left_position}")
+            action.append(calculate_turn_velocity(front_left_current_pos, front_left_position))
+            action.append(calculate_turn_velocity(front_right_current_pos, front_right_position))
+            action.append(calculate_turn_velocity(rear_left_current_pos, rear_left_position))
+            action.append(calculate_turn_velocity(rear_right_current_pos, rear_right_position))
+            
+            sortlist=[front_left_velocity, front_right_velocity, rear_left_velocity, rear_right_velocity]
             maxs = abs(max(sortlist, key=abs))
-            if(maxs<0.5):
+            if (maxs < 0.5):
                 for num in sortlist:
                     action.append(0.0)
             else:
                 for num in sortlist:
-                    if(maxs != 0 and abs(maxs)>10):
-                        num = (num/abs(maxs))*10 #scales down velocty to max of 10 radians
-                        #print(num)
+                    if (maxs != 0 and abs(maxs) > 10):
+                        # scales down velocty to max of 10 radians
+                        num = (num/abs(maxs))*10
+                        # print(num)
                     action.append(num)
-            # print(action)
+            # print(len(action))
             actionlist.append(action)
         # Sets robots velocities
         self._swerve.set_joint_velocities(torch.FloatTensor(actionlist))
 
-    # def simplifiy_angle(self,current_pos, pos, velocity):
-    #     while (abs(current_pos - pos) > math.pi / 2):
-    #         pos -= math.pi
-    #         velocity *= -1
-    #     return pos, velocity
-            
     def reset_idx(self, env_ids):
         # print("line 211")
         # For when the environment resets. This is great for randomization and increases the chances of a successful policy in the real world
@@ -487,3 +368,25 @@ class Swerve_Kinematics_Task(RLTask):
         self.reset_buf[:] = torch.where(
             self.progress_buf >= self._max_episode_length - 1, ones, die)
         # print("line 316")
+
+
+def simplifiy_angle(current_pos, turn_pos, velocity):
+    while (abs(current_pos - turn_pos) > math.pi / 2):
+        if(turn_pos>current_pos):
+            turn_pos -= math.pi
+        else:
+            turn_pos += math.pi
+        velocity *= -1
+    return turn_pos, velocity
+
+
+def calculate_turn_velocity(current_pos, turn_position):
+    turningspeed = 5.0
+    setspeed = 0.0
+    if (current_pos > turn_position+(math.pi/90) or current_pos < turn_position-(math.pi/90)):
+        setspeed = abs(turn_position-current_pos)/(math.pi/9)
+        if (setspeed > turningspeed):
+            setspeed = turningspeed
+        if (turn_position < current_pos):
+            setspeed *= -1
+    return setspeed

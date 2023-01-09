@@ -163,7 +163,7 @@ rl_device: cuda:0
 num_threads: 4
 solver_type: 1
 test: true
-checkpoint: /home/nitin/Documents/2023RobotROS/Swervesim/swervesim/runs/SwerveK/nn/SwerveK.pth
+checkpoint: /home/nitin/Documents/2023RobotROS/Swervesim/swervesim/runs/SwerveK/nn/Best_SwerveK.pth
 headless: false
 wandb_activate: false
 wandb_group: ''
