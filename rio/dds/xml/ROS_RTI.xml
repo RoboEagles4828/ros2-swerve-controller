@@ -1,0 +1,76 @@
+<?xml version="1.0"?>
+<!--
+(c) 2005-2015 Copyright, Real-Time Innovations.  All rights reserved.
+No duplications, whole or partial, manual or electronic, may be made
+without express written permission.  Any such copies, or revisions thereof,
+must display this notice unaltered.
+This code contains trade secrets of Real-Time Innovations, Inc.
+ -->
+
+<dds xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="https://community.rti.com/schema/current/rti_dds_qos_profiles.xsd">
+
+    <!-- Qos Library -->
+    <qos_library name="ROS2_QOS">
+        <qos_profile name="Default" base_name="BuiltinQosSnippetLib::QosPolicy.Reliability.BestEffort" is_default_qos="true">
+      </qos_profile>
+    </qos_library>
+
+    <!-- types -->
+    <types>
+      <include file="Header.xml"/>
+      <module name="sensor_msgs">
+        <module name="msg">
+          <module name="dds_">
+            <struct name="Joy_">
+              <member name="header" type= "nonBasic" nonBasicTypeName="std_msgs::msg::Header"/>
+              <member name="axes" type="float32" sequenceMaxLength="100"/>
+              <member name="buttons" type="int32" sequenceMaxLength="100"/>
+            </struct>
+
+            <struct name="JointState_">
+              <member name="header" type= "nonBasic" nonBasicTypeName="std_msgs::msg::Header"/>
+              <member name="position" type="float32" sequenceMaxLength="100"/>
+              <member name="velocity" type="float32" sequenceMaxLength="100"/>
+              <member name="effort" type="float32" sequenceMaxLength="100"/>
+          </module>
+        </module>
+      </module>
+    </types>
+
+    <!-- Domain Library -->
+    <domain_library name="ROS2_DOMAIN_LIB">
+        <domain name="ROS2_DOMAIN_JOYSTICK" domain_id="0">
+            <register_type name="sensor_msgs::msg::dds_::Joy_" type_ref="sensor_msgs::msg::dds_::Joy_" />
+            <topic name="rt/joystick_data" register_type_ref="sensor_msgs::msg::dds_::Joy_"/>
+        </domain>
+        <domain name="ROS2_DOMAIN_JOINT_CMDS" domain_id="0">
+          <register_type name="sensor_msgs::msg::dds_::JointState_" type_ref="sensor_msgs::msg::dds_::JointState_" />
+          <topic name="rt/isaac_joint_commands" register_type_ref="sensor_msgs::msg::dds_::JointState_"/>
+        </domain>
+        <domain name="ROS2_DOMAIN_ENCODER_INFO" domain_id="0">
+          <register_type name="sensor_msgs::msg::dds_::JointState_" type_ref="sensor_msgs::msg::dds_::JointState_" />
+          <topic name="rt/encoder_info" register_type_ref="sensor_msgs::msg::dds_::JointState_"/>
+        </domain>
+    </domain_library>
+
+    <!-- Participant library -->
+    <domain_participant_library name="ROS2_PARTICIPANT_LIB">
+      <domain_participant name="joystick" domain_ref="ROS2_DOMAIN_LIB::ROS2_DOMAIN_JOYSTICK">
+        <publisher name="joystick_data_publisher">
+          <data_writer name="joystick_data_writer" topic_ref="rt/joystick_data"/>
+        </publisher>
+      </domain_participant>
+
+      <domain_participant name="joint_commands" domain_ref="ROS2_DOMAIN_LIB::ROS2_DOMAIN_JOINT_CMDS">
+        <subscriber name="isaac_joint_commands_subscriber">
+            <data_reader name="joint_commands_reader" topic_ref="rt/isaac_joint_commands" />
+        </subscriber>
+      </domain_participant>
+
+      <domain_participant name="encoder_info" domain_ref="ROS2_DOMAIN_LIB::ROS2_DOMAIN_ENCODER_INFO">
+          <subscriber name="encoder_info_publisher">
+            <data_reader name="encoder_info_reader" topic_ref="rt/encoder_info" />
+          </subscriber>
+      </domain_participant>
+    </domain_participant_library>
+</dds>
