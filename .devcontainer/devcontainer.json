@@ -18,6 +18,7 @@
         "ACCEPT_EULA": "Y",
         "DISPLAY": "${localEnv:DISPLAY}",
         "NVIDIA_DRIVER_CAPABILITIES": "all",
+        // Nucleus Config
         "OMNI_USER": "admin",
         "OMNI_PASS": "admin",
         "OMNI_SERVER": "omniverse://127.0.0.1/NVIDIA/Assets/Isaac/2022.2.0"

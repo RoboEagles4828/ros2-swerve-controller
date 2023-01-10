@@ -1,0 +1,11 @@
+[bookmarks]
+2023RobotROS = "/workspaces/2023RobotROS"
+localhost = "omniverse://localhost"
+
+[cache]
+data_dir = "/home/vscode/.cache/ov/Cache"
+proxy_cache_enabled = false
+proxy_cache_server = ""
+
+[connection_library]
+proxy_dict = "*#localhost:8891,f"
