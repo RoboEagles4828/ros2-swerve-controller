@@ -4,7 +4,7 @@ class EncoderInfoWriter:
 
     def __init__(self):
         self.connector = rti.Connector(config_name="ROS2_PARTICIPANT_LIB::encoder_info",
-        url="/home/lvuser/py/ROS_RTI.xml")
+        url="/home/saranga/FRC/RTI_DDS/orin_to_rio/2023RobotROS/rio/dds/xml/ROS_RTI.xml")
         self.output = self.connector.get_output("encoder_info_publisher::encoder_info_writer")
 
         # print("Waiting for subscriptions...")

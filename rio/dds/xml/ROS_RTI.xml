@@ -32,6 +32,7 @@ This code contains trade secrets of Real-Time Innovations, Inc.
               <member name="position" type="float32" sequenceMaxLength="100"/>
               <member name="velocity" type="float32" sequenceMaxLength="100"/>
               <member name="effort" type="float32" sequenceMaxLength="100"/>
+            </struct>
           </module>
         </module>
       </module>
@@ -49,7 +50,7 @@ This code contains trade secrets of Real-Time Innovations, Inc.
         </domain>
         <domain name="ROS2_DOMAIN_ENCODER_INFO" domain_id="0">
           <register_type name="sensor_msgs::msg::dds_::JointState_" type_ref="sensor_msgs::msg::dds_::JointState_" />
-          <topic name="rt/encoder_info" register_type_ref="sensor_msgs::msg::dds_::JointState_"/>
+          <topic name="rt/isaac_joint_statess" register_type_ref="sensor_msgs::msg::dds_::JointState_"/>
         </domain>
     </domain_library>
 
@@ -68,9 +69,9 @@ This code contains trade secrets of Real-Time Innovations, Inc.
       </domain_participant>
 
       <domain_participant name="encoder_info" domain_ref="ROS2_DOMAIN_LIB::ROS2_DOMAIN_ENCODER_INFO">
-          <subscriber name="encoder_info_publisher">
-            <data_reader name="encoder_info_reader" topic_ref="rt/encoder_info" />
-          </subscriber>
+          <publisher name="encoder_info_publisher">
+            <data_writer name="encoder_info_writer" topic_ref="rt/isaac_joint_statess" />
+          </publisher>
       </domain_participant>
     </domain_participant_library>
 </dds>

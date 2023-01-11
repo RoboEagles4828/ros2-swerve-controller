@@ -4,7 +4,7 @@ class JoyStickWriter:
 
     def __init__(self):
         self.connector = rti.Connector(config_name="ROS2_PARTICIPANT_LIB::joystick",
-        url="/home/lvuser/py/ROS_RTI.xml")
+        url="/home/saranga/FRC/RTI_DDS/orin_to_rio/2023RobotROS/rio/dds/xml/ROS_RTI.xml")
         self.output = self.connector.get_output("joystick_data_publisher::joystick_data_writer")
 
         # print("Waiting for subscriptions...")
