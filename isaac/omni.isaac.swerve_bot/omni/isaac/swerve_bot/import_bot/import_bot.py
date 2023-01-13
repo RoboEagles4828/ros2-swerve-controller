@@ -1,13 +1,19 @@
 import omni.graph.core as og
 import omni.usd
+import omni.client
+from pxr import UsdGeom, Sdf
 from omni.isaac.swerve_bot.base_sample import BaseSample
 from omni.isaac.urdf import _urdf
 from omni.isaac.core.robots import Robot
 from omni.isaac.core.utils import prims
 from omni.isaac.core_nodes.scripts.utils import set_target_prims
 from omni.kit.viewport_legacy import get_default_viewport_window
+from omni.isaac.core.utils.nucleus import get_assets_root_path
+from omni.isaac.core.prims import RigidPrimView
 from pxr import UsdPhysics
 import omni.kit.commands
+from omni.isaac.core.utils.stage import add_reference_to_stage
+
 import os
 import numpy as np
 import math
@@ -19,6 +25,78 @@ def set_drive_params(drive, stiffness, damping, max_force):
     if(max_force != 0.0):
         drive.GetMaxForceAttr().Set(max_force)
     return
+def create_parent_xforms(asset_usd_path, source_prim_path, save_as_path=None):
+    """ Adds a new UsdGeom.Xform prim for each Mesh/Geometry prim under source_prim_path.
+        Moves material assignment to new parent prim if any exists on the Mesh/Geometry prim.
+
+        Args:
+            asset_usd_path (str): USD file path for asset
+            source_prim_path (str): USD path of root prim
+            save_as_path (str): USD file path for modified USD stage. Defaults to None, will save in same file.
+    """
+    omni.usd.get_context().open_stage(asset_usd_path)
+    stage = omni.usd.get_context().get_stage()
+
+    prims = [stage.GetPrimAtPath(source_prim_path)]
+    edits = Sdf.BatchNamespaceEdit()
+    while len(prims) > 0:
+        prim = prims.pop(0)
+        print(prim)
+        if prim.GetTypeName() in ["Mesh", "Capsule", "Sphere", "Box"]:
+            new_xform = UsdGeom.Xform.Define(stage, str(prim.GetPath()) + "_xform")
+            print(prim, new_xform)
+            edits.Add(Sdf.NamespaceEdit.Reparent(prim.GetPath(), new_xform.GetPath(), 0))
+            continue
+
+        children_prims = prim.GetChildren()
+        prims = prims + children_prims
+
+    stage.GetRootLayer().Apply(edits)
+
+    if save_as_path is None:
+        omni.usd.get_context().save_stage()
+    else:
+        omni.usd.get_context().save_as_stage(save_as_path)
+def convert_asset_instanceable(asset_usd_path, source_prim_path, save_as_path=None, create_xforms=True):
+    """ Makes all mesh/geometry prims instanceable.
+        Can optionally add UsdGeom.Xform prim as parent for all mesh/geometry prims.
+        Makes a copy of the asset USD file, which will be used for referencing.
+        Updates asset file to convert all parent prims of mesh/geometry prims to reference cloned USD file.
+
+        Args:
+            asset_usd_path (str): USD file path for asset
+            source_prim_path (str): USD path of root prim
+            save_as_path (str): USD file path for modified USD stage. Defaults to None, will save in same file.
+            create_xforms (bool): Whether to add new UsdGeom.Xform prims to mesh/geometry prims.
+    """
+
+    if create_xforms:
+        create_parent_xforms(asset_usd_path, source_prim_path, save_as_path)
+        asset_usd_path = save_as_path
+
+    instance_usd_path = ".".join(asset_usd_path.split(".")[:-1]) + "_meshes.usd"
+    omni.client.copy(asset_usd_path, instance_usd_path)
+    omni.usd.get_context().open_stage(asset_usd_path)
+    stage = omni.usd.get_context().get_stage()
+
+    prims = [stage.GetPrimAtPath(source_prim_path)]
+    while len(prims) > 0:
+        prim = prims.pop(0)
+        if prim:
+            if prim.GetTypeName() in ["Mesh", "Capsule", "Sphere", "Box"]:
+                parent_prim = prim.GetParent()
+                if parent_prim and not parent_prim.IsInstance():
+                    parent_prim.GetReferences().AddReference(assetPath=instance_usd_path, primPath=str(parent_prim.GetPath()))
+                    parent_prim.SetInstanceable(True)
+                    continue
+
+            children_prims = prim.GetChildren()
+            prims = prims + children_prims
+
+    if save_as_path is None:
+        omni.usd.get_context().save_stage()
+    else:
+        omni.usd.get_context().save_as_stage(save_as_path)
 
 class ImportBot(BaseSample):
     def __init__(self) -> None:
@@ -30,19 +108,19 @@ class ImportBot(BaseSample):
         world.scene.add_default_ground_plane()
         # self.setup_perspective_cam()
         self.setup_world_action_graph()
+        # convert_asset_instanceable("/home/nitin/Documents/2023RobotROS/Swervesim/sim_assets/swerve/swerve2.usd","/swerve","/home/nitin/Documents/2023RobotROS/Swervesim/sim_assets/swerve/swerve_instanceable.usd",True)
         return
 
     async def setup_post_load(self):
         self._world = self.get_world()
-        self.robot_name = "Swerve"
+        self.robot_name = "swerve"
         self.extension_path = os.path.abspath(__file__)
         self.project_root_path = os.path.abspath(os.path.join(self.extension_path, "../../../../../../.."))
         self.path_to_urdf = os.path.join(self.project_root_path, "src/swerve_description/swerve.urdf")
         carb.log_info(self.path_to_urdf)
 
         self._robot_prim_path = self.import_robot(self.path_to_urdf)
-
-
+        
         if self._robot_prim_path is None:
             print("Error: failed to import robot")
             return
@@ -50,6 +128,8 @@ class ImportBot(BaseSample):
         self._robot_prim = self._world.scene.add(
             Robot(prim_path=self._robot_prim_path, name=self.robot_name, position=np.array([0.0, 0.0, 0.3]))
         )
+        # add_reference_to_stage("/home/nitin/Documents/2023RobotROS/Swervesim/sim_assets/2023_field/FE-2023.usd", "/World/Field")
+
         self.configure_robot(self._robot_prim_path)
         return
     
@@ -66,11 +146,18 @@ class ImportBot(BaseSample):
         import_config.default_drive_type = _urdf.UrdfJointTargetType.JOINT_DRIVE_VELOCITY
         import_config.distance_scale = 1.0
         import_config.density = 0.0
+        # path_to_usd = os.path.abspath(os.path.join(urdf_path, "../"))
+        # print(path_to_usd)
+        # path_to_usd = os.path.join(path_to_usd, "swerve.usd")
         result, prim_path = omni.kit.commands.execute( "URDFParseAndImportFile", 
             urdf_path=urdf_path,
             import_config=import_config)
+        # prim_path = omni.usd.get_stage_next_free_path(world.scene.stage, str(world.scene.stage.GetDefaultPrim().GetPath()) + prim_path, False)
+        # robot_prim = world.scene.stage.OverridePrim(prim_path)
+        # robot_prim.GetReferences().AddReference(path_to_usd)
 
         if result:
+            print(prim_path)
             return prim_path
         return None
 
@@ -82,26 +169,22 @@ class ImportBot(BaseSample):
         chassis_name = "swerve_chassis_link"
 
        
-        front_left_axle = UsdPhysics.DriveAPI.Get(stage.GetPrimAtPath(f"{robot_prim_path}/{chassis_name}/front_left_axle_joint"), "angular")
-        front_right_axle = UsdPhysics.DriveAPI.Get(stage.GetPrimAtPath(f"{robot_prim_path}/{chassis_name}/front_right_axle_joint"), "angular")
-        rear_left_axle = UsdPhysics.DriveAPI.Get(stage.GetPrimAtPath(f"{robot_prim_path}/{chassis_name}/rear_left_axle_joint"), "angular")
-        rear_right_axle = UsdPhysics.DriveAPI.Get(stage.GetPrimAtPath(f"{robot_prim_path}/{chassis_name}/rear_right_axle_joint"), "angular")
-        front_left_wheel = UsdPhysics.DriveAPI.Get(stage.GetPrimAtPath(f"{robot_prim_path}/front_left_axle_link/front_left_wheel_joint"), "angular")
-        front_right_wheel = UsdPhysics.DriveAPI.Get(stage.GetPrimAtPath(f"{robot_prim_path}/front_right_axle_link/front_right_wheel_joint"), "angular")
-        rear_left_wheel = UsdPhysics.DriveAPI.Get(stage.GetPrimAtPath(f"{robot_prim_path}/rear_left_axle_link/rear_left_wheel_joint"), "angular")
-        rear_right_wheel = UsdPhysics.DriveAPI.Get(stage.GetPrimAtPath(f"{robot_prim_path}/rear_right_axle_link/rear_right_wheel_joint"), "angular")
-        # set_drive_params(front_left_axle, 10000000.0, 100000.0, 98.0)
-        # set_drive_params(front_right_axle, 10000000.0, 100000.0, 98.0)
-        # set_drive_params(rear_left_axle, 10000000.0, 100000.0, 98.0)
-        # set_drive_params(rear_right_axle, 10000000.0, 100000.0, 98.0)
-        set_drive_params(front_left_axle, 0, math.radians(1e5), 98.0)
-        set_drive_params(front_right_axle, 0, math.radians(1e5), 98.0)
-        set_drive_params(rear_left_axle, 0, math.radians(1e5), 98.0)
-        set_drive_params(rear_right_axle, 0, math.radians(1e5), 98.0)       
-        set_drive_params(front_left_wheel, 0, math.radians(1e5), 98.0)
-        set_drive_params(front_right_wheel, 0, math.radians(1e5), 98.0)
-        set_drive_params(rear_left_wheel, 0, math.radians(1e5), 98.0)
-        set_drive_params(rear_right_wheel, 0, math.radians(1e5), 98.0)
+        front_left_axle = UsdPhysics.DriveAPI.Get(stage.GetPrimAtPath(f"{robot_prim_path}/front_left_axle_link"), "angular")
+        front_right_axle = UsdPhysics.DriveAPI.Get(stage.GetPrimAtPath(f"{robot_prim_path}/front_right_axle_link"), "angular")
+        back_left_axle = UsdPhysics.DriveAPI.Get(stage.GetPrimAtPath(f"{robot_prim_path}/back_left_axle_link"), "angular")
+        back_right_axle = UsdPhysics.DriveAPI.Get(stage.GetPrimAtPath(f"{robot_prim_path}/back_right_axle_link"), "angular")
+        front_left_wheel = UsdPhysics.DriveAPI.Get(stage.GetPrimAtPath(f"{robot_prim_path}/front_left_wheel_link"), "angular")
+        front_right_wheel = UsdPhysics.DriveAPI.Get(stage.GetPrimAtPath(f"{robot_prim_path}/front_right_wheel_link"), "angular")
+        back_left_wheel = UsdPhysics.DriveAPI.Get(stage.GetPrimAtPath(f"{robot_prim_path}/back_left_wheel_link"), "angular")
+        back_right_wheel = UsdPhysics.DriveAPI.Get(stage.GetPrimAtPath(f"{robot_prim_path}/back_right_wheel_link"), "angular")
+        set_drive_params(front_left_axle, 1, math.radians(1e5), 98.0)
+        set_drive_params(front_right_axle, 1, math.radians(1e5), 98.0)
+        set_drive_params(back_left_axle, 1, math.radians(1e5), 98.0)
+        set_drive_params(back_right_axle, 1, math.radians(1e5), 98.0)
+        set_drive_params(front_left_wheel, 1, math.radians(1e5), 98.0)
+        set_drive_params(front_right_wheel, 1, math.radians(1e5), 98.0)
+        set_drive_params(back_left_wheel, 1, math.radians(1e5), 98.0)
+        set_drive_params(back_right_wheel, 1, math.radians(1e5), 98.0)
         #self.create_lidar(robot_prim_path)
         #self.create_depth_camera()
         self.setup_robot_action_graph(robot_prim_path)
@@ -246,7 +329,7 @@ class ImportBot(BaseSample):
                     ("Context.outputs:context", "SubscribeJointState.inputs:context"),
                     ("SubscribeJointState.outputs:jointNames", "articulation_controller.inputs:jointNames"),
                     ("SubscribeJointState.outputs:velocityCommand", "articulation_controller.inputs:velocityCommand"),
-                    # ("SubscribeJointState.outputs:positionCommand", "articulation_controller.inputs:positionCommand"),
+                    ("SubscribeJointState.outputs:positionCommand", "articulation_controller.inputs:positionCommand"),
                 ],
             }
         )
