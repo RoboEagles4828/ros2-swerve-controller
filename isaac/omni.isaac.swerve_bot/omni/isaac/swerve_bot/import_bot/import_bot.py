@@ -9,8 +9,11 @@ from omni.isaac.core.utils import prims
 from omni.isaac.core_nodes.scripts.utils import set_target_prims
 from omni.kit.viewport_legacy import get_default_viewport_window
 from omni.isaac.core.utils.nucleus import get_assets_root_path
+from omni.isaac.core.prims import RigidPrimView
 from pxr import UsdPhysics
 import omni.kit.commands
+from omni.isaac.core.utils.stage import add_reference_to_stage
+
 import os
 import numpy as np
 import math
@@ -125,6 +128,8 @@ class ImportBot(BaseSample):
         self._robot_prim = self._world.scene.add(
             Robot(prim_path=self._robot_prim_path, name=self.robot_name, position=np.array([0.0, 0.0, 0.3]))
         )
+        add_reference_to_stage("/home/nitin/Documents/2023RobotROS/Swervesim/sim_assets/2023_field/FE-2023.usd", "/World/Field")
+
         self.configure_robot(self._robot_prim_path)
         return
     
