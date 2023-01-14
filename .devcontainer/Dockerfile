@@ -4,7 +4,8 @@ LABEL dev.containers.features="common"
 ENV ROS_DISTRO=humble
 ENV ROS_PYTHON_VERSION=3
 ENV DEBIAN_FRONTEND=noninteractive
+SHELL [ "/usr/bin/bash", "-c"]
 
-# COPY install-ros-humble.sh .
 
-# RUN ls
+COPY install-ros-humble.sh .
+RUN source install-ros-humble.sh

@@ -1,6 +1,7 @@
 {
     "name": "isaac-sim",
     "build": {
+        "cacheFrom": "vsc-2023robotros-5f9d4b30431fd6150b19f2f08784b91a",
         "dockerfile": "./Dockerfile",
         "context": "."
     },
@@ -50,6 +51,14 @@
         "--network=host"
     ],
     "privileged": true,
+
+    "customizations": {
+        "vscode": {
+            "extensions": [
+                "ms-iot.vscode-ros"
+            ]
+        }
+    },
     // Use 'forwardPorts' to make a list of ports inside the container available locally.
     // "forwardPorts": [],
 
