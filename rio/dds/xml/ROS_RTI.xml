@@ -27,11 +27,12 @@ This code contains trade secrets of Real-Time Innovations, Inc.
               <member name="buttons" type="int32" sequenceMaxLength="100"/>
             </struct>
 
-            <struct name="JointState_">
+            <struct name= "JointState_">
               <member name="header" type= "nonBasic" nonBasicTypeName="std_msgs::msg::Header"/>
-              <member name="position" type="float32" sequenceMaxLength="100"/>
-              <member name="velocity" type="float32" sequenceMaxLength="100"/>
-              <member name="effort" type="float32" sequenceMaxLength="100"/>
+              <member name="name" sequenceMaxLength="100" stringMaxLength="255" type="string"/>
+              <member name="position" sequenceMaxLength="100" type="float64"/>
+              <member name="velocity" sequenceMaxLength="100" type="float64"/>
+              <member name="effort" sequenceMaxLength="100" type="float64"/>
             </struct>
           </module>
         </module>

@@ -20,8 +20,8 @@ front_right_port.run_motor_port = 4
 front_right_port.turn_motor_port = 5
 
 back_right_port.run_motor_port = 6
-back_right_port.turn_motor_port = 7
+back_right_port.turn_motor_port = 11
 
-test_port = 8
+test_port = 7
 
-controller_port = 9
+controller_port = 0
