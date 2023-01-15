@@ -27,32 +27,22 @@ class ImportBot(BaseSample):
         super().__init__()
         return
 
+    
+
     def setup_scene(self):
         world = self.get_world()
+        world.get_physics_context().enable_gpu_dynamics(True)
+        self.setup_field()
+
         world.scene.add_default_ground_plane()
         # self.setup_perspective_cam()
         self.setup_world_action_graph()
         return
-
-    async def setup_post_load(self):
-        self._world = self.get_world()
-        self._world.get_physics_context().enable_gpu_dynamics(True)
-        self.robot_name = "Swerve"
+   
+    def setup_field(self):
+        world = self.get_world()
         self.extension_path = os.path.abspath(__file__)
         self.project_root_path = os.path.abspath(os.path.join(self.extension_path, "../../../../../../.."))
-        self.path_to_urdf = os.path.join(self.project_root_path, "src/swerve_description/swerve.urdf")
-        carb.log_info(self.path_to_urdf)
-
-        self._robot_prim_path = self.import_robot(self.path_to_urdf)
-
-
-        if self._robot_prim_path is None:
-            print("Error: failed to import robot")
-            return
-        
-        self._robot_prim = self._world.scene.add(
-            Robot(prim_path=self._robot_prim_path, name=self.robot_name, position=np.array([0.0, 0.0, 0.3]))
-        )
         field = os.path.join(self.project_root_path, "Swervesim/sim_assets/2023_field/FE-2023.usd")
         add_reference_to_stage(usd_path=field,prim_path="/World/Field")
         cone = os.path.join(self.project_root_path, "Swervesim/sim_assets/2023_field/parts/GE-23700_JFH.usd")
@@ -84,6 +74,26 @@ class ImportBot(BaseSample):
         cube_3 = GeometryPrim("/World/Cube_3","cube_3_view",position=np.array([-1.20298,0.65059,0.121]))
         cube_4 = GeometryPrim("/World/Cube_4","cube_4_view",position=np.array([-1.20298,1.86979,0.121]))
 
+    async def setup_post_load(self):
+        self._world = self.get_world()
+        # self._world.get_physics_context().enable_gpu_dynamics(True)
+        self.robot_name = "Swerve"
+        self.extension_path = os.path.abspath(__file__)
+        self.project_root_path = os.path.abspath(os.path.join(self.extension_path, "../../../../../../.."))
+        self.path_to_urdf = os.path.join(self.project_root_path, "src/swerve_description/swerve.urdf")
+        carb.log_info(self.path_to_urdf)
+
+        self._robot_prim_path = self.import_robot(self.path_to_urdf)
+
+
+        if self._robot_prim_path is None:
+            print("Error: failed to import robot")
+            return
+        
+        self._robot_prim = self._world.scene.add(
+            Robot(prim_path=self._robot_prim_path, name=self.robot_name, position=np.array([0.0, 0.0, 0.3]))
+        )
+        
         self.configure_robot(self._robot_prim_path)
         return
     
@@ -128,14 +138,14 @@ class ImportBot(BaseSample):
         # set_drive_params(front_right_axle, 10000000.0, 100000.0, 98.0)
         # set_drive_params(rear_left_axle, 10000000.0, 100000.0, 98.0)
         # set_drive_params(rear_right_axle, 10000000.0, 100000.0, 98.0)
-        set_drive_params(front_left_axle, 0, math.radians(1e5), 98.0)
-        set_drive_params(front_right_axle, 0, math.radians(1e5), 98.0)
-        set_drive_params(rear_left_axle, 0, math.radians(1e5), 98.0)
-        set_drive_params(rear_right_axle, 0, math.radians(1e5), 98.0)       
-        set_drive_params(front_left_wheel, 0, math.radians(1e5), 98.0)
-        set_drive_params(front_right_wheel, 0, math.radians(1e5), 98.0)
-        set_drive_params(rear_left_wheel, 0, math.radians(1e5), 98.0)
-        set_drive_params(rear_right_wheel, 0, math.radians(1e5), 98.0)
+        set_drive_params(front_left_axle, 1, 1000, 98.0)
+        set_drive_params(front_right_axle, 1, 1000, 98.0)
+        set_drive_params(rear_left_axle, 1, 1000, 98.0)
+        set_drive_params(rear_right_axle, 1, 1000, 98.0)       
+        set_drive_params(front_left_wheel, 1, 1000, 98.0)
+        set_drive_params(front_right_wheel, 1, 1000, 98.0)
+        set_drive_params(rear_left_wheel, 1, 1000, 98.0)
+        set_drive_params(rear_right_wheel, 1, 1000, 98.0)
         #self.create_lidar(robot_prim_path)
         #self.create_depth_camera()
         self.setup_robot_action_graph(robot_prim_path)
