@@ -12,8 +12,6 @@ import time
 class TestRobot(wpilib.TimedRobot):
 
     def robotInit(self) -> None:
-        self.joint_commands_reader = joint_cmds.JointCommandsReader()
-        self.encoder_info_writer = encoder_info.EncoderInfoWriter()
         self.drivetrain = dt.DriveTrain()
         self.controller = self.drivetrain.controller
         self.axes = []
@@ -24,12 +22,18 @@ class TestRobot(wpilib.TimedRobot):
         self.turn_wheel_velocities = []
         self.threads = []
         self.first = True
+        self._lock = mp.Lock()
+        self._stop_threads = False
 
     def joystick_thread_ptr(self, controller):
         joystick_writer = joystick.JoyStickWriter()
         while True:
+            if self._stop_threads is True:
+                return
+            
             axes = [controller.getLeftX(), controller.getLeftY(), controller.getRightX(), controller.getRightY()]
             buttons = [int(controller.getAButton()), int(controller.getBButton()), int(controller.getXButton()), int(controller.getYButton())]
+
             joystick_writer.sendData(axes, buttons)
             time.sleep(20/1000) #20ms teleopPeriodic loop time
         
@@ -39,41 +43,82 @@ class TestRobot(wpilib.TimedRobot):
         while True:
             #TODO: fix the data format
             data = joint_commands_reader.readData()
-            if (data != None):
-                print(data['velocity'])
-                run_wheel_velocities = data['velocity'][:4]
-                turn_wheel_velocities = data['velocity'][4:]
-                print('run wheel vel: ' + str(run_wheel_velocities[0]))
-                drivetrain.setTestVelocity(run_wheel_velocities[0])
-            position = 1
-            velocity = 1
-            # encoder_info_writer.sendData(position, velocity)
 
-    # def encoder_info_thread_ptr(self):
-    #     while True:
-    #         self.encoder_info_writer.sendData(self.position, self.velocity)
-    #         time.sleep(20/1000) #20ms teleopPeriodic loop time
+            if self._stop_threads is True:
+                return
+            
+            while data is None:
+                data = joint_commands_reader.readData()
+
+            if self._stop_threads is True:
+                return
+
+            run_wheel_velocities = data['velocity'][:4]
+            turn_wheel_velocities = data['velocity'][4:]
+
+            with self._lock:
+                drivetrain.setTestVelocity(run_wheel_velocities[0])
+
+    def encoder_info_thread_ptr(self, drivetrain):
+        encoder_info_writer = encoder_info.EncoderInfoWriter()
+        while True:
+            if self._stop_threads is True:
+                return
+            
+            with self._lock:
+                info = drivetrain.getEncoderInfo()
+
+            encoder_info_writer.sendData(info['position'], info['velocity'])
+            time.sleep(20/1000) #20ms teleopPeriodic loop time
 
 
     def teleopInit(self) -> None:
         print("Initializing Threads")
         # self.joystick_thread = mp.Thread(target=self.joystick_thread_ptr, name='joystick', args=(self.drivetrain.controller, ))
-        self.joint_commands_thread = mp.Thread(target=self.joint_commands_thread_ptr, name='joint_commands', args=(self.drivetrain, ))
+        # self.joint_commands_thread = mp.Thread(target=self.joint_commands_thread_ptr, name='joint_commands', args=(self.drivetrain, ))
         # self.encoder_info_thread = mp.Thread(target=self.encoder_info_thread_ptr, name='encoder_info')
 
-        self.threads = [self.joint_commands_thread]
+        self.joystick_thread = {'name': 'joystick_thread', 'thread': None}
+        self.joint_commands_thread = {'name': 'joint_commands_thread', 'thread': None}
+        self.encoder_info_thread = {'name': 'encoder_info_thread', 'thread': None}
+
+        self.threads = [self.joystick_thread, self.joint_commands_thread, self.encoder_info_thread]
+
+    def start_thread(self, name):
+        print(f'STARTING THREAD -- {name}')
+
+        if 'joysick' in name:
+            return mp.Thread(target=self.joystick_thread_ptr, name='joystick', args=(self.drivetrain.controller, ))
+        elif 'joint' in name:
+            return mp.Thread(target=self.joint_commands_thread_ptr, name='joint_commands', args=(self.drivetrain, ))
+        elif 'encoder' in name:
+            return mp.Thread(target=self.encoder_info_thread_ptr, name='encoder_info', args=(self.drivetrain, ))
+        else:
+            print(f'THREAD -- {name} -- NOT FOUND')
 
     def teleopPeriodic(self) -> None:
-        if self.first:
-            print("Starting Threads")
-            for thread in self.threads:
-                thread.start()
-            self.first = False
+        print(self.threads)
+        for index in range(len(self.threads)):
+            thread = self.threads[index]
+            if thread['thread'] is None:
+                thread['thread'] = self.start_thread(thread['name'])
+                thread['thread'].start()
+                self.threads[index] = thread
+            else:
+                if not thread['thread'].isAlive():
+                    thread['thread'] = self.start_thread(thread['name'])
+                    thread['thread'].start()
+                    self.threads[index] = thread
+                    print(self.threads)
 
-    def teleopExit(self) -> None:
+    def disabledInit(self) -> None:
+        print("Exit")
+        self._stop_threads = True
         for thread in self.threads:
-            thread.join()
-        super().teleopExit()
+            print(f'Stopping Thread -- {thread["name"]}')
+            thread['thread'].join()
+        print('All Threads Stopped')
+        super().disabledInit()
 
 
 if __name__ == '__main__':

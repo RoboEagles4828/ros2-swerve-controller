@@ -2,33 +2,35 @@ import wpilib
 import ctre
 from enum import Enum, auto
 import math
-
+import Constants
+   
 
 class SwervePort():
     def __init__(self):
         self.turn_motor_port: int = None
         self.run_motor_port: int = None
 
-front_left_port = SwervePort()
-back_left_port = SwervePort()
-front_right_port = SwervePort()
-back_right_port = SwervePort()
+class Constants:
+    front_left_port = SwervePort()
+    back_left_port = SwervePort()
+    front_right_port = SwervePort()
+    back_right_port = SwervePort()
 
-front_left_port.run_motor_port = 0
-front_left_port.turn_motor_port = 1
+    front_left_port.run_motor_port = 0
+    front_left_port.turn_motor_port = 1
 
-back_left_port.run_motor_port = 2
-back_left_port.turn_motor_port = 3
+    back_left_port.run_motor_port = 2
+    back_left_port.turn_motor_port = 3
 
-front_right_port.run_motor_port = 4
-front_right_port.turn_motor_port = 5
+    front_right_port.run_motor_port = 4
+    front_right_port.turn_motor_port = 5
 
-back_right_port.run_motor_port = 12
-back_right_port.turn_motor_port = 11
+    back_right_port.run_motor_port = 12
+    back_right_port.turn_motor_port = 11
 
-test_port = 6
+    test_port = 6
 
-controller_port = 0
+    controller_port = 0
 
 class MotorType(Enum):
     RUN_MOTOR = auto()
@@ -57,13 +59,13 @@ class SwerveModule():
 
 class DriveTrain():
     def __init__(self):
-        self.front_left = SwerveModule(front_left_port)
-        self.front_right = SwerveModule(front_right_port)
-        self.back_left = SwerveModule(back_left_port)
-        self.back_right = SwerveModule(back_right_port)
-        self.controller = wpilib.XboxController(0)
-        self.test_motor = ctre.TalonFX(test_port)
-        # self.test_motor.configSelectedFeedbackSensor(ctre.TalonFXFeedbackDevice.IntegratedSensor)
+        self.front_left = SwerveModule(Constants.front_left_port)
+        self.front_right = SwerveModule(Constants.front_right_port)
+        self.back_left = SwerveModule(Constants.back_left_port)
+        self.back_right = SwerveModule(Constants.back_right_port)
+        self.controller = wpilib.XboxController(Constants.controller_port)
+        self.test_motor = ctre.TalonFX(Constants.test_port)
+        self.test_motor.configSelectedFeedbackSensor(ctre.TalonFXFeedbackDevice.IntegratedSensor)
 
     def setVelocities(self, run_motor_velocities: list, turn_motor_velocities: list):
         #TODO: fix order
@@ -105,7 +107,8 @@ class DriveTrain():
         TICKS_PER_REV = 2048
         TICKS_PER_RAD = TICKS_PER_REV / (2 * math.pi)
         scaled_vel = TICKS_PER_RAD * test_velocity / 10.0
-        self.test_motor.set(ctre.TalonFXControlMode.PercentOutput, test_velocity)
+        # self.test_motor.set(ctre.TalonFXControlMode.PercentOutput, test_velocity)
+        self.test_motor.set(ctre.TalonFXControlMode.Velocity, scaled_vel)
 
     def getTestEncoderInfo(self):
         return self.test_motor.getSensorCollection().getIntegratedSensorPosition(), self.test_motor.getSensorCollection().getIntegratedSensorVelocity()
