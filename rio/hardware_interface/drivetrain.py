@@ -62,7 +62,7 @@ class DriveTrain():
         self.back_left = SwerveModule(back_left_port)
         self.back_right = SwerveModule(back_right_port)
         self.controller = wpilib.XboxController(0)
-        self.test_motor = ctre.TalonSRX(test_port)
+        self.test_motor = ctre.TalonFX(test_port)
         # self.test_motor.configSelectedFeedbackSensor(ctre.TalonFXFeedbackDevice.IntegratedSensor)
 
     def setVelocities(self, run_motor_velocities: list, turn_motor_velocities: list):
@@ -105,7 +105,7 @@ class DriveTrain():
         TICKS_PER_REV = 2048
         TICKS_PER_RAD = TICKS_PER_REV / (2 * math.pi)
         scaled_vel = TICKS_PER_RAD * test_velocity / 10.0
-        self.test_motor.set(ctre.TalonSRXControlMode.PercentOutput, test_velocity)
+        self.test_motor.set(ctre.TalonFXControlMode.PercentOutput, test_velocity)
 
     def getTestEncoderInfo(self):
         return self.test_motor.getSensorCollection().getIntegratedSensorPosition(), self.test_motor.getSensorCollection().getIntegratedSensorVelocity()
