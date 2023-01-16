@@ -39,7 +39,6 @@ class TestRobot(wpilib.TimedRobot):
         
     def joint_commands_thread_ptr(self, drivetrain):
         joint_commands_reader = joint_cmds.JointCommandsReader()
-        encoder_info_writer = encoder_info.EncoderInfoWriter()
         while True:
             #TODO: fix the data format
             data = joint_commands_reader.readData()
@@ -53,11 +52,14 @@ class TestRobot(wpilib.TimedRobot):
             if self._stop_threads is True:
                 return
 
+            print(f' JOINT COMMANDS -- {data}')
+
             run_wheel_velocities = data['velocity'][:4]
             turn_wheel_velocities = data['velocity'][4:]
 
             with self._lock:
-                drivetrain.setTestVelocity(run_wheel_velocities[0])
+                # drivetrain.setTestVelocity(run_wheel_velocities[0], turn_wheel_velocities[0])
+                drivetrain.setVelocities(run_wheel_velocities[0], turn_wheel_velocities[0])
 
     def encoder_info_thread_ptr(self, drivetrain):
         encoder_info_writer = encoder_info.EncoderInfoWriter()
@@ -87,7 +89,7 @@ class TestRobot(wpilib.TimedRobot):
     def start_thread(self, name):
         print(f'STARTING THREAD -- {name}')
 
-        if 'joysick' in name:
+        if 'joystick' in name:
             return mp.Thread(target=self.joystick_thread_ptr, name='joystick', args=(self.drivetrain.controller, ))
         elif 'joint' in name:
             return mp.Thread(target=self.joint_commands_thread_ptr, name='joint_commands', args=(self.drivetrain, ))
@@ -97,7 +99,7 @@ class TestRobot(wpilib.TimedRobot):
             print(f'THREAD -- {name} -- NOT FOUND')
 
     def teleopPeriodic(self) -> None:
-        print(self.threads)
+        # print(self.threads)
         for index in range(len(self.threads)):
             thread = self.threads[index]
             if thread['thread'] is None:
@@ -105,20 +107,19 @@ class TestRobot(wpilib.TimedRobot):
                 thread['thread'].start()
                 self.threads[index] = thread
             else:
-                if not thread['thread'].isAlive():
+                if not thread['thread'].is_alive():
                     thread['thread'] = self.start_thread(thread['name'])
                     thread['thread'].start()
                     self.threads[index] = thread
                     print(self.threads)
 
-    def disabledInit(self) -> None:
+    def teleopExit(self) -> None:
         print("Exit")
         self._stop_threads = True
         for thread in self.threads:
             print(f'Stopping Thread -- {thread["name"]}')
             thread['thread'].join()
         print('All Threads Stopped')
-        super().disabledInit()
 
 
 if __name__ == '__main__':

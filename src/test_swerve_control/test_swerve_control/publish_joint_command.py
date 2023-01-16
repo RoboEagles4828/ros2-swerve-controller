@@ -28,7 +28,7 @@ class PublishJointCmd(Node):
             'rear_right_axle_joint']
         # position_cmds.name = []
         
-        velocity_cmds.velocity = [ 0.0, 0.0, 0.0, 0.0, 50.0, 50.0, 50.0, 50.0]
+        velocity_cmds.velocity = [50.0, 0.0, 0.0, 0.0, 200.0, 50.0, 50.0, 50.0]
         # position_cmds.position = []
 
         self.publisher_.publish(velocity_cmds)

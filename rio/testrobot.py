@@ -21,12 +21,7 @@ class TestRobot(wpilib.TimedRobot):
         print('Init')
 
     def teleopPeriodic(self) -> None:
-        # self.axes = [self.controller.getLeftX(), self.controller.getLeftY(), self.controller.getRightX(), self.controller.getRightY()]
-        # self.buttons = [int(self.controller.getAButton()), int(self.controller.getBButton()), int(self.controller.getXButton()), int(self.controller.getYButton())]
-        # self.axes = [0]*4
-        # self.buttons = [0]*4
-        # self.joystick_writer.sendData(self.axes, self.buttons)
-        self.drivetrain.setTestVelocity(50)
+        self.drivetrain.setTestVelocity(500, 50)
 
 if __name__ == '__main__':
     # robot = TestRobot()
