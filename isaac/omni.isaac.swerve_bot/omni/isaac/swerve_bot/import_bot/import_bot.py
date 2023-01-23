@@ -47,6 +47,9 @@ class ImportBot(BaseSample):
         add_reference_to_stage(usd_path=field,prim_path="/World/Field")
         cone = os.path.join(self.project_root_path, "Swervesim/sim_assets/2023_field/parts/GE-23700_JFH.usd")
         cube = os.path.join(self.project_root_path, "Swervesim/sim_assets/2023_field/parts/GE-23701_JFL.usd")
+        chargestation = os.path.join(self.project_root_path, "Swervesim/sim_assets/2023_field/charge_station.usd")
+        add_reference_to_stage(chargestation, "/World/ChargeStation_1")
+        add_reference_to_stage(chargestation, "/World/ChargeStation_2") 
         add_reference_to_stage(cone, "/World/Cone_1")
         add_reference_to_stage(cone, "/World/Cone_2")
         add_reference_to_stage(cone, "/World/Cone_3")
@@ -59,6 +62,8 @@ class ImportBot(BaseSample):
         cone_2 = GeometryPrim("/World/Cone_2","cone_2_view",position=np.array([1.20298,3.08899,0.0]))
         cone_3 = GeometryPrim("/World/Cone_3","cone_3_view",position=np.array([-1.20298,-0.56861,0.0]))
         cone_4 = GeometryPrim("/World/Cone_4","cone_4_view",position=np.array([-1.20298,3.08899,0.0]))
+        chargestation_1 = GeometryPrim("/World/ChargeStation_1","cone_3_view",position=np.array([-4.20298,-0.56861,0.0]))
+        chargestation_2 = GeometryPrim("/World/ChargeStation_2","cone_4_view",position=np.array([4.20298,0.56861,0.0]))
         
 
         add_reference_to_stage(cube, "/World/Cube_1")
@@ -110,6 +115,7 @@ class ImportBot(BaseSample):
         import_config.default_drive_type = _urdf.UrdfJointTargetType.JOINT_DRIVE_VELOCITY
         import_config.distance_scale = 1.0
         import_config.density = 0.0
+        import_config.collapse_fixed_joints = False
         result, prim_path = omni.kit.commands.execute( "URDFParseAndImportFile", 
             urdf_path=urdf_path,
             import_config=import_config)
@@ -134,6 +140,7 @@ class ImportBot(BaseSample):
         front_right_wheel = UsdPhysics.DriveAPI.Get(stage.GetPrimAtPath(f"{robot_prim_path}/front_right_axle_link/front_right_wheel_joint"), "angular")
         rear_left_wheel = UsdPhysics.DriveAPI.Get(stage.GetPrimAtPath(f"{robot_prim_path}/rear_left_axle_link/rear_left_wheel_joint"), "angular")
         rear_right_wheel = UsdPhysics.DriveAPI.Get(stage.GetPrimAtPath(f"{robot_prim_path}/rear_right_axle_link/rear_right_wheel_joint"), "angular")
+        base = UsdPhysics.DriveAPI.Get(stage.GetPrimAtPath(f"{robot_prim_path}/base_link/swerve_chassis_joint"), "angular")
         # set_drive_params(front_left_axle, 10000000.0, 100000.0, 98.0)
         # set_drive_params(front_right_axle, 10000000.0, 100000.0, 98.0)
         # set_drive_params(rear_left_axle, 10000000.0, 100000.0, 98.0)
@@ -146,6 +153,7 @@ class ImportBot(BaseSample):
         set_drive_params(front_right_wheel, 1, 1000, 98.0)
         set_drive_params(rear_left_wheel, 1, 1000, 98.0)
         set_drive_params(rear_right_wheel, 1, 1000, 98.0)
+        set_drive_params(base,1,1000,98.0)
         #self.create_lidar(robot_prim_path)
         #self.create_depth_camera()
         self.setup_robot_action_graph(robot_prim_path)

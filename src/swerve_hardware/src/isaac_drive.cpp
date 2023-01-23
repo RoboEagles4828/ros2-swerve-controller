@@ -60,33 +60,33 @@ CallbackReturn IsaacDriveHardware::on_init(const hardware_interface::HardwareInf
   {
     return CallbackReturn::ERROR;
   }
-
+  RCLCPP_INFO(rclcpp::get_logger("IsaacDriveHardware"), "Joint_Command: %ld", info_.joints.size() );
   hw_positions_.resize(info_.joints.size(), std::numeric_limits<double>::quiet_NaN());
   hw_velocities_.resize(info_.joints.size(), std::numeric_limits<double>::quiet_NaN());
-  hw_command_velocity_.resize(info_.joints.size(), std::numeric_limits<double>::quiet_NaN());
+  hw_command_velocity_.resize(info_.joints.size()-1, std::numeric_limits<double>::quiet_NaN());
   // hw_command_position_.resize(info_.joints.size()/2, std::numeric_limits<double>::quiet_NaN());
 
 
   for (const hardware_interface::ComponentInfo & joint : info_.joints)
   {
     joint_names_.push_back(joint.name);
-    if (joint.command_interfaces.size() != 1)
-    {
-      RCLCPP_FATAL(
-        rclcpp::get_logger("IsaacDriveHardware"),
-        "Joint '%s' has %zu command interfaces found. 1 expected.", joint.name.c_str(),
-        joint.command_interfaces.size());
-      return CallbackReturn::ERROR;
-    }
+    // if (joint.command_interfaces.size() != 1 && joint.name.find("chassis") != std::string::npos)
+    // {
+    //   RCLCPP_FATAL(
+    //     rclcpp::get_logger("IsaacDriveHardware"),
+    //     "Joint '%s' has %zu command interfaces found. 1 expected.", joint.name.c_str(),
+    //     joint.command_interfaces.size());
+    //   return CallbackReturn::ERROR;
+    // }
 
-    if (joint.command_interfaces[0].name != hardware_interface::HW_IF_VELOCITY && joint.command_interfaces[0].name != hardware_interface::HW_IF_POSITION)
-    {
-      RCLCPP_FATAL(
-        rclcpp::get_logger("IsaacDriveHardware"),
-        "Joint '%s' have %s command interfaces found. '%s' expected.", joint.name.c_str(),
-        joint.command_interfaces[0].name.c_str(), hardware_interface::HW_IF_VELOCITY);
-      return CallbackReturn::ERROR;
-    }
+    // if (joint.command_interfaces[0].name != hardware_interface::HW_IF_VELOCITY && joint.command_interfaces[0].name != hardware_interface::HW_IF_POSITION)
+    // {
+    //   RCLCPP_FATAL(
+    //     rclcpp::get_logger("IsaacDriveHardware"),
+    //     "Joint '%s' have %s command interfaces found. '%s' expected.", joint.name.c_str(),
+    //     joint.command_interfaces[0].name.c_str(), hardware_interface::HW_IF_VELOCITY);
+    //   return CallbackReturn::ERROR;
+    // }
 
     if (joint.state_interfaces.size() != 2)
     {
@@ -145,9 +145,8 @@ std::vector<hardware_interface::CommandInterface> IsaacDriveHardware::export_com
 
   for (auto i = 0u; i < info_.joints.size(); i++)
   {
-    RCLCPP_INFO(rclcpp::get_logger("IsaacDriveHardware"), "Joint Name %s", info_.joints[i].name.c_str());
 
-    if (info_.joints[i].command_interfaces[0].name == hardware_interface::HW_IF_VELOCITY) {
+    if (info_.joints[i].command_interfaces.size() != 0 && info_.joints[i].command_interfaces[0].name == hardware_interface::HW_IF_VELOCITY) {
       command_interfaces.emplace_back(hardware_interface::CommandInterface(
         info_.joints[i].name, hardware_interface::HW_IF_VELOCITY, &hw_command_velocity_[i]));
         RCLCPP_INFO(rclcpp::get_logger("IsaacDriveHardware"), "Velocity: %s", info_.joints[i].name.c_str() );
@@ -162,6 +161,8 @@ std::vector<hardware_interface::CommandInterface> IsaacDriveHardware::export_com
     //     counter_position++;
     // }
   }
+  RCLCPP_INFO(rclcpp::get_logger("IsaacDriveHardware"), "Command interface number: %ld", command_interfaces.size() );
+
 
   return command_interfaces;
 }
@@ -176,8 +177,8 @@ CallbackReturn IsaacDriveHardware::on_activate(
   // Set Default Values for State Interface Arrays
   for (auto i = 0u; i < hw_positions_.size(); i++)
   {
-    hw_positions_[i] = NULL;
-    hw_velocities_[i] = NULL;
+    hw_positions_[i] = 0.0;
+    hw_velocities_[i] = 0.0;
     joint_names_map_[joint_names_[i]] = i + 1; // ADD 1 to differentiate null key
   }
 
