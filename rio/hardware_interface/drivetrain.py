@@ -17,17 +17,17 @@ class Constants:
     test_port = SwervePort()
 
     #TODO: change CAN ids
-    front_left_port.run_motor_port = 0
-    front_left_port.turn_motor_port = 1
+    front_left_port.run_motor_port = 9
+    front_left_port.turn_motor_port = 7
 
-    back_left_port.run_motor_port = 2
-    back_left_port.turn_motor_port = 3
+    back_left_port.run_motor_port = 6
+    back_left_port.turn_motor_port = 4
 
-    front_right_port.run_motor_port = 4
-    front_right_port.turn_motor_port = 5
+    front_right_port.run_motor_port = 12
+    front_right_port.turn_motor_port = 10
 
-    back_right_port.run_motor_port = 12
-    back_right_port.turn_motor_port = 11
+    back_right_port.run_motor_port = 3
+    back_right_port.turn_motor_port = 1
 
     controller_port = 0
 
@@ -72,15 +72,22 @@ class SwerveModule():
         self.turn_motor.config_kI(0, self.ki, 30)
         self.turn_motor.config_kD(0, self.kd, 30)
 
-    
-    def setVelocity(self, run_motor_vel, turn_motor_vel):
+    def convert(self, angular_vel):
         TICKS_PER_REV = 2048
         TICKS_PER_RAD = TICKS_PER_REV / (2 * math.pi)
-        scaled_vel = TICKS_PER_RAD * run_motor_vel / 10.0
-        scaled_vel2 = TICKS_PER_RAD * turn_motor_vel / 10.0
+        scaled_vel = TICKS_PER_RAD * angular_vel / 10.0
 
+        return scaled_vel
+
+    def setVelocity(self, run_motor_vel, turn_motor_vel):
+        scaled_vel = self.convert(run_motor_vel)
+        scaled_vel2 = self.convert(turn_motor_vel)
         self.run_motor.set(ctre.TalonFXControlMode.Velocity, scaled_vel)
         self.turn_motor.set(ctre.TalonFXControlMode.Velocity, scaled_vel2)
+
+    def stop(self):
+        self.run_motor.set(ctre.TalonFXControlMode.PercentOutput, 0)
+        self.turn_motor.set(ctre.TalonFXControlMode.PercentOutput, 0)
 
     def getEncoderInfo(self, type: MotorType):
         if type == MotorType.RUN_MOTOR:
@@ -94,8 +101,20 @@ class DriveTrain():
         self.front_right = SwerveModule(Constants.front_right_port)
         self.back_left = SwerveModule(Constants.back_left_port)
         self.back_right = SwerveModule(Constants.back_right_port)
-        self.test = SwerveModule(Constants.test_port)
+        # self.test = SwerveModule(Constants.test_port)
         self.controller = wpilib.XboxController(Constants.controller_port)
+        self.last_command_vel = 100000.0
+        self.joints = \
+        {
+            'front_left_wheel_joint': self.front_left.run_motor,
+            'front_left_axle_joint': self.front_left.turn_motor,
+            'front_right_wheel_joint': self.front_right.run_motor,
+            'front_right_axle_joint': self.front_right.turn_motor,
+            'rear_left_wheel_joint': self.back_left.run_motor,
+            'rear_left_axle_joint': self.back_left.turn_motor,
+            'rear_right_wheel_joint': self.back_right.run_motor,
+            'rear_right_axle_joint': self.back_right.turn_motor,
+        }
 
         # self.test_motor = ctre.TalonFX(Constants.test_port)
         # self.test_motor.configFactoryDefault()
@@ -129,10 +148,11 @@ class DriveTrain():
 
     def setVelocities(self, run_motor_velocities: list, turn_motor_velocities: list):
         #TODO: fix order
-        self.front_left.setVelocity(run_motor_velocities[0], turn_motor_velocities[0])
-        self.front_right.setVelocity(run_motor_velocities[1], turn_motor_velocities[1])
-        self.back_left.setVelocity(run_motor_velocities[2], run_motor_velocities[2])
-        self.back_right.setVelocity(run_motor_velocities[3], run_motor_velocities[3])
+        if len(run_motor_velocities) != 0 or len(turn_motor_velocities) != 0:
+            self.front_left.setVelocity(run_motor_velocities[0], turn_motor_velocities[0])
+            self.front_right.setVelocity(run_motor_velocities[1], turn_motor_velocities[1])
+            self.back_left.setVelocity(run_motor_velocities[2], run_motor_velocities[2])
+            self.back_right.setVelocity(run_motor_velocities[3], run_motor_velocities[3])
 
     def getEncoderInfo(self):
         run_motor_velocities = []
@@ -164,13 +184,37 @@ class DriveTrain():
         return {'position': positions, 'velocity': velocities}
 
     def setTestVelocity(self, test_velocity, test_velocity2):
-        # TICKS_PER_REV = 2048
-        # TICKS_PER_RAD = TICKS_PER_REV / (2 * math.pi)
-        # scaled_vel = TICKS_PER_RAD * test_velocity / 10.0
-        # scaled_vel2 = TICKS_PER_RAD * test_velocity2 / 10.0
+        scaled_vel = self.convert(test_velocity)
+        scaled_vel2 = self.convert(test_velocity2)
         # self.test_motor.set(ctre.TalonFXControlMode.PercentOutput, test_velocity)
         # self.test_motor_2.set(ctre.TalonFXControlMode.PercentOutput, test_velocity2)
-        self.test.setVelocity(test_velocity, test_velocity2)
+        # self.test.setVelocity(test_velocity, test_velocity2)
+
+    def stop(self):
+        self.front_left.stop()
+        self.front_right.stop()
+        self.back_left.stop()
+        self.back_right.stop()
+        # self.test_motor.set(ctre.TalonFXControlMode.PercentOutput, 0)
+        # self.test_motor_2.set(ctre.TalonFXControlMode.PercentOutput, 0)
+
+    def convert(self, angular_vel):
+        TICKS_PER_REV = 2048
+        TICKS_PER_RAD = TICKS_PER_REV / (2 * math.pi)
+        scaled_vel = TICKS_PER_RAD * angular_vel / 10.0
+
+        return scaled_vel
+
+    def setDynamicVelocities(self, commands):
+        vel_control_mode = ctre.TalonFXControlMode.Velocity
+        if commands:
+            for command in commands:
+                name = command['name']
+                motor = self.joints[name]
+                vel = command['velocity']
+                if self.last_command_vel != vel:
+                    motor.set(vel_control_mode, self.convert(vel))
+                    self.last_command_vel = vel
 
     def getTestEncoderInfo(self):
         return self.test_motor.getSensorCollection().getIntegratedSensorPosition(), self.test_motor.getSensorCollection().getIntegratedSensorVelocity()

@@ -1,5 +1,6 @@
 import rclpy
 from rclpy.node import Node
+from rclpy.qos import QoSReliabilityPolicy, QoSProfile, QoSDurabilityPolicy, QoSHistoryPolicy
 
 from sensor_msgs.msg import JointState
 
@@ -8,6 +9,7 @@ class PublishJointCmd(Node):
 
     def __init__(self):
         super().__init__('publish_joint_commands')
+        # self.qos_profile = QoSProfile(reliability=QoSReliabilityPolicy.BEST_EFFORT, depth=1)
         self.publisher_ = self.create_publisher(JointState, 'isaac_joint_commands', 10)
         timer_period = 0.5  # seconds
         self.timer = self.create_timer(timer_period, self.timer_callback)
@@ -15,6 +17,7 @@ class PublishJointCmd(Node):
 
     def timer_callback(self):
         velocity_cmds = JointState()
+        # test = JointState()
         # position_cmds = JointState()
         
         velocity_cmds.name = [
@@ -26,9 +29,10 @@ class PublishJointCmd(Node):
             'front_right_axle_joint',
             'rear_left_axle_joint',
             'rear_right_axle_joint']
+        # test.name = ['test1', 'test2']
         # position_cmds.name = []
         
-        velocity_cmds.velocity = [50.0, 0.0, 0.0, 0.0, 200.0, 50.0, 50.0, 50.0]
+        velocity_cmds.velocity = [0.0, -10.0, 0.0, 0.0, 0.0, 50.0, 0.0, 0.0]
         # position_cmds.position = []
 
         self.publisher_.publish(velocity_cmds)

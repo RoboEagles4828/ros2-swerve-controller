@@ -5,6 +5,8 @@ import dds.encoder_info_writer as encoder_info
 import hardware_interface.drivetrain as dt
 import threading as mp
 import time
+import rticonnextdds_connector as rti
+import os, inspect
 
 
 
@@ -26,52 +28,79 @@ class TestRobot(wpilib.TimedRobot):
         self._stop_threads = False
 
     def joystick_thread_ptr(self, controller):
-        joystick_writer = joystick.JoyStickWriter()
-        while True:
-            if self._stop_threads is True:
-                return
-            
-            axes = [controller.getLeftX(), controller.getLeftY(), controller.getRightX(), controller.getRightY()]
-            buttons = [int(controller.getAButton()), int(controller.getBButton()), int(controller.getXButton()), int(controller.getYButton())]
+        curr_path = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
+        rel_path = "dds/xml/ROS_RTI.xml"
+        xml_path = os.path.join(curr_path, rel_path)
+        config_name="ROS2_PARTICIPANT_LIB::joystick"
+        with rti.open_connector(config_name=config_name, url=xml_path) as connector:
+            joystick_writer = joystick.JoyStickWriter(connector)
+            while True:
+                if self._stop_threads is True:
+                    # joystick_writer.closeConnector()
+                    break
+                
+                axes = [controller.getLeftX(), controller.getLeftY(), controller.getRightX(), controller.getRightY()]
+                buttons = [int(controller.getAButton()), int(controller.getBButton()), int(controller.getXButton()), int(controller.getYButton())]
 
-            joystick_writer.sendData(axes, buttons)
-            time.sleep(20/1000) #20ms teleopPeriodic loop time
+                joystick_writer.sendData(axes, buttons)
+                time.sleep(20/1000) #20ms teleopPeriodic loop time
         
-    def joint_commands_thread_ptr(self, drivetrain):
-        joint_commands_reader = joint_cmds.JointCommandsReader()
-        while True:
-            #TODO: fix the data format
-            data = joint_commands_reader.readData()
-
-            if self._stop_threads is True:
-                return
-            
-            while data is None:
+    def joint_commands_thread_ptr(self, drivetrain: dt.DriveTrain):
+        curr_path = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
+        rel_path = "dds/xml/ROS_RTI.xml"
+        xml_path = os.path.join(curr_path, rel_path)
+        config_name="ROS2_PARTICIPANT_LIB::joint_commands"
+        with rti.open_connector(config_name=config_name, url=xml_path) as connector:
+            joint_commands_reader = joint_cmds.JointCommandsReader(connector)
+            while True:
+                #TODO: fix the data format
                 data = joint_commands_reader.readData()
 
-            if self._stop_threads is True:
-                return
+                if self._stop_threads is True:
+                    # joint_commands_reader.closeConnector()
+                    break
+                
+                while data is None:
+                    data = joint_commands_reader.readData()
 
-            print(f' JOINT COMMANDS -- {data}')
+                if self._stop_threads is True:
+                    # joint_commands_reader.closeConnector()   
+                    break
 
-            run_wheel_velocities = data['velocity'][:4]
-            turn_wheel_velocities = data['velocity'][4:]
+                print(f' JOINT COMMANDS -- {data}')
+                if data:
+                    if data == 'HALT':
+                        print('RAMPING MOTORS DOWN')
+                        with self._lock:
+                            drivetrain.stop()
+                        continue
+                    with self._lock:
+                        # drivetrain.setTestVelocity(run_wheel_velocities[0], turn_wheel_velocities[0])
+                        drivetrain.setDynamicVelocities(data)
 
-            with self._lock:
-                # drivetrain.setTestVelocity(run_wheel_velocities[0], turn_wheel_velocities[0])
-                drivetrain.setVelocities(run_wheel_velocities[0], turn_wheel_velocities[0])
+        print('CLEANING UP')
 
     def encoder_info_thread_ptr(self, drivetrain):
-        encoder_info_writer = encoder_info.EncoderInfoWriter()
-        while True:
-            if self._stop_threads is True:
-                return
-            
-            with self._lock:
-                info = drivetrain.getEncoderInfo()
+        curr_path = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
+        rel_path = "dds/xml/ROS_RTI.xml"
+        xml_path = os.path.join(curr_path, rel_path)
+        config_name="ROS2_PARTICIPANT_LIB::encoder_info"
+        with rti.open_connector(config_name=config_name, url=xml_path) as connector:
+            encoder_info_writer = encoder_info.EncoderInfoWriter(connector)
+            while True:
+                if self._stop_threads is True:
+                    # encoder_info_writer.closeConnector()
+                    break
+                
+                with self._lock:
+                    info = drivetrain.getEncoderInfo()
 
-            encoder_info_writer.sendData(info['position'], info['velocity'])
-            time.sleep(20/1000) #20ms teleopPeriodic loop time
+                encoder_info_writer.sendData(info['position'], info['velocity'])
+                time.sleep(20/1000) #20ms teleopPeriodic loop time
+
+    def pingWatchdog(self):
+        watchdog = wpilib.Watchdog(20/1000)
+        watchdog.reset()
 
 
     def teleopInit(self) -> None:
@@ -85,6 +114,7 @@ class TestRobot(wpilib.TimedRobot):
         self.encoder_info_thread = {'name': 'encoder_info_thread', 'thread': None}
 
         self.threads = [self.joystick_thread, self.joint_commands_thread, self.encoder_info_thread]
+        # self.threads = [self.joint_commands_thread]
 
     def start_thread(self, name):
         print(f'STARTING THREAD -- {name}')
@@ -113,14 +143,27 @@ class TestRobot(wpilib.TimedRobot):
                     self.threads[index] = thread
                     print(self.threads)
 
-    def teleopExit(self) -> None:
-        print("Exit")
+    def stop_threads(self):
         self._stop_threads = True
         for thread in self.threads:
             print(f'Stopping Thread -- {thread["name"]}')
             thread['thread'].join()
         print('All Threads Stopped')
 
+
+    def teleopExit(self) -> None:
+        print("Exit")
+        self.pingWatchdog()
+        self.stop_threads()
+        self._stop_threads = False
+
+    # def disabledInit(self) -> None:
+    #     if mp.active_count() > 0:
+    #         print("Killing all remaining threads")
+    #         for thread in mp.enumerate():
+    #             print(f'Killing {thread.name}')
+    #             thread.join()
+    #         print("All threads killed")
 
 if __name__ == '__main__':
     # robot = TestRobot()

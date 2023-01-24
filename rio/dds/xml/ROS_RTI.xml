@@ -71,7 +71,7 @@ This code contains trade secrets of Real-Time Innovations, Inc.
 
       <domain_participant name="encoder_info" domain_ref="ROS2_DOMAIN_LIB::ROS2_DOMAIN_ENCODER_INFO">
           <publisher name="encoder_info_publisher">
-            <data_writer name="encoder_info_writer" topic_ref="rt/isaac_joint_statess" />
+            <data_writer name="encoder_info_writer" topic_ref="rt/isaac_joint_states" />
           </publisher>
       </domain_participant>
     </domain_participant_library>
