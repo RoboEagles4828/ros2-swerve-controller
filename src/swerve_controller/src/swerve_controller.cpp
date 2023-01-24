@@ -61,6 +61,13 @@ namespace swerve_controller
     // temporary
     return position_.get().get_value();
   }
+  Base::Base(std::reference_wrapper<const hardware_interface::LoanedStateInterface> position, std::string name) : position_(position), name(std::move(name)) {}
+  double Base::get_position(void)
+  {
+    // temporary
+    return position_.get().get_value();
+  }
+
   SwerveController::SwerveController() : controller_interface::ControllerInterface() {}
 
   CallbackReturn SwerveController::on_init()
@@ -68,6 +75,8 @@ namespace swerve_controller
     try
     {
       // with the lifecycle node being initialized, we can declare parameters
+      auto_declare<std::string>("swerve_chassis_joint", swerve_chassis_joint_name_);
+
       auto_declare<std::string>("front_left_wheel_joint", front_left_wheel_joint_name_);
       auto_declare<std::string>("front_right_wheel_joint", front_right_wheel_joint_name_);
       auto_declare<std::string>("rear_left_wheel_joint", rear_left_wheel_joint_name_);
@@ -111,6 +120,7 @@ namespace swerve_controller
   InterfaceConfiguration SwerveController::state_interface_configuration() const
   {
     std::vector<std::string> conf_names;
+    conf_names.push_back(swerve_chassis_joint_name_ + "/" + HW_IF_POSITION);
     conf_names.push_back(front_left_axle_joint_name_ + "/" + HW_IF_POSITION);
     conf_names.push_back(front_right_axle_joint_name_ + "/" + HW_IF_POSITION);
     conf_names.push_back(rear_left_axle_joint_name_ + "/" + HW_IF_POSITION);
@@ -175,6 +185,9 @@ namespace swerve_controller
       RCLCPP_INFO(logger, "NO");
       double x_offset = wheel_params_.x_offset;
       double radius = wheel_params_.radius;
+      double temp = linear_x_cmd * cos(chassis_handle-> get_position())+ linear_y_cmd * sin(chassis_handle-> get_position());
+      linear_y_cmd = -1 * linear_x_cmd * sin(chassis_handle-> get_position()) + linear_y_cmd * cos(chassis_handle-> get_position());
+      linear_x_cmd = temp;
 
       // Compute Wheel Velocities and Positions
       const double a = linear_x_cmd - angular_cmd * x_offset / 2;
@@ -414,6 +427,8 @@ namespace swerve_controller
     auto logger = node_->get_logger();
 
     // Get Parameters
+    swerve_chassis_joint_name_ = node_->get_parameter("swerve_chassis_joint").as_string();
+
     front_left_wheel_joint_name_ = node_->get_parameter("front_left_wheel_joint").as_string();
     front_right_wheel_joint_name_ = node_->get_parameter("front_right_wheel_joint").as_string();
     rear_left_wheel_joint_name_ = node_->get_parameter("rear_left_wheel_joint").as_string();
@@ -424,6 +439,11 @@ namespace swerve_controller
     rear_left_axle_joint_name_ = node_->get_parameter("rear_left_axle_joint").as_string();
     rear_right_axle_joint_name_ = node_->get_parameter("rear_right_axle_joint").as_string();
 
+    if (swerve_chassis_joint_name_.empty())
+    {
+      RCLCPP_ERROR(logger, "swerve_chassis_joint_name is not set");
+      return CallbackReturn::ERROR;
+    }
     if (front_left_wheel_joint_name_.empty())
     {
       RCLCPP_ERROR(logger, "front_left_wheel_joint_name is not set");
@@ -540,6 +560,7 @@ namespace swerve_controller
     front_right_handle_2_ = get_axle(front_right_axle_joint_name_);
     rear_left_handle_2_ = get_axle(rear_left_axle_joint_name_);
     rear_right_handle_2_ = get_axle(rear_right_axle_joint_name_);
+    chassis_handle = get_base(swerve_chassis_joint_name_);
 
     if (!front_left_handle_ || !front_right_handle_ || !rear_left_handle_ || !rear_right_handle_ || !front_left_handle_2_ || !front_right_handle_2_ || !rear_left_handle_2_ || !rear_right_handle_2_)
     {
@@ -666,6 +687,29 @@ namespace swerve_controller
       return nullptr;
     }
     return std::make_shared<Axle>(std::ref(*command_handle), std::ref(*state_handle), axle_name);
+  }
+  std::shared_ptr<Base> SwerveController::get_base(const std::string &base_name)
+  {
+    auto logger = node_->get_logger();
+    if (base_name.empty())
+    {
+      RCLCPP_ERROR(logger, "Base joint name not given. Make sure all joints are specified.");
+      return nullptr;
+    }
+    const auto state_handle = std::find_if(
+        state_interfaces_.cbegin(), state_interfaces_.cend(),
+        [&base_name](const auto &interface)
+        {
+          return interface.get_name() == base_name &&
+                 interface.get_interface_name() == HW_IF_POSITION;
+        });
+
+    if (state_handle == state_interfaces_.cend())
+    {
+      RCLCPP_ERROR(logger, "Unable to obtain joint state handle for %s", base_name.c_str());
+      return nullptr;
+    }
+    return std::make_shared<Base>(std::ref(*state_handle), base_name);
   }
 } // namespace swerve_controller
 
