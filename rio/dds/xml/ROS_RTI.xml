@@ -51,7 +51,7 @@ This code contains trade secrets of Real-Time Innovations, Inc.
         </domain>
         <domain name="ROS2_DOMAIN_ENCODER_INFO" domain_id="0">
           <register_type name="sensor_msgs::msg::dds_::JointState_" type_ref="sensor_msgs::msg::dds_::JointState_" />
-          <topic name="rt/isaac_joint_statess" register_type_ref="sensor_msgs::msg::dds_::JointState_"/>
+          <topic name="rt/isaac_joint_states" register_type_ref="sensor_msgs::msg::dds_::JointState_"/>
         </domain>
     </domain_library>
 

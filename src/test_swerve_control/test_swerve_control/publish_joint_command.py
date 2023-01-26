@@ -1,6 +1,7 @@
 import rclpy
 from rclpy.node import Node
 from rclpy.qos import QoSReliabilityPolicy, QoSProfile, QoSDurabilityPolicy, QoSHistoryPolicy
+import math
 
 from sensor_msgs.msg import JointState
 
@@ -31,8 +32,10 @@ class PublishJointCmd(Node):
             'rear_right_axle_joint']
         # test.name = ['test1', 'test2']
         # position_cmds.name = []
+
+        rad_per = 2 * math.pi
         
-        velocity_cmds.velocity = [0.0, -10.0, 0.0, 0.0, 0.0, 50.0, 0.0, 0.0]
+        velocity_cmds.velocity = [0.0, 0.0, 0.0, 0.0, rad_per, rad_per, rad_per, rad_per]
         # position_cmds.position = []
 
         self.publisher_.publish(velocity_cmds)

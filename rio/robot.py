@@ -67,7 +67,6 @@ class TestRobot(wpilib.TimedRobot):
                     # joint_commands_reader.closeConnector()   
                     break
 
-                print(f' JOINT COMMANDS -- {data}')
                 if data:
                     if data == 'HALT':
                         print('RAMPING MOTORS DOWN')
@@ -88,6 +87,7 @@ class TestRobot(wpilib.TimedRobot):
         with rti.open_connector(config_name=config_name, url=xml_path) as connector:
             encoder_info_writer = encoder_info.EncoderInfoWriter(connector)
             while True:
+                info = None
                 if self._stop_threads is True:
                     # encoder_info_writer.closeConnector()
                     break
@@ -95,12 +95,12 @@ class TestRobot(wpilib.TimedRobot):
                 with self._lock:
                     info = drivetrain.getEncoderInfo()
 
-                encoder_info_writer.sendData(info['position'], info['velocity'])
+                encoder_info_writer.sendData(info)
                 time.sleep(20/1000) #20ms teleopPeriodic loop time
 
-    def pingWatchdog(self):
-        watchdog = wpilib.Watchdog(20/1000)
-        watchdog.reset()
+    # def pingWatchdog(self):
+    #     watchdog = wpilib.Watchdog(20/1000)
+    #     watchdog.reset()
 
 
     def teleopInit(self) -> None:
@@ -141,7 +141,6 @@ class TestRobot(wpilib.TimedRobot):
                     thread['thread'] = self.start_thread(thread['name'])
                     thread['thread'].start()
                     self.threads[index] = thread
-                    print(self.threads)
 
     def stop_threads(self):
         self._stop_threads = True
@@ -153,7 +152,7 @@ class TestRobot(wpilib.TimedRobot):
 
     def teleopExit(self) -> None:
         print("Exit")
-        self.pingWatchdog()
+        # self.pingWatchdog()
         self.stop_threads()
         self._stop_threads = False
 

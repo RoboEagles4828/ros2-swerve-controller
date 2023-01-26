@@ -6,186 +6,168 @@ import math
 
 class SwervePort():
     def __init__(self):
-        self.turn_motor_port: int = None
-        self.run_motor_port: int = None
+        self.axle_motor_port: int = None
+        self.wheel_motor_port: int = None
 
 class Constants:
-    front_left_port = SwervePort()
-    back_left_port = SwervePort()
-    front_right_port = SwervePort()
-    back_right_port = SwervePort()
-    test_port = SwervePort()
+
 
     #TODO: change CAN ids
-    front_left_port.run_motor_port = 9
-    front_left_port.turn_motor_port = 7
+    front_left_wheel_motor_port = 9
+    front_left_axle_motor_port = 7
 
-    back_left_port.run_motor_port = 6
-    back_left_port.turn_motor_port = 4
+    back_left_wheel_motor_port = 6
+    back_left_axle_motor_port = 4
 
-    front_right_port.run_motor_port = 12
-    front_right_port.turn_motor_port = 10
+    front_right_wheel_motor_port = 12
+    front_right_axle_motor_port = 10
 
-    back_right_port.run_motor_port = 3
-    back_right_port.turn_motor_port = 1
+    back_right_wheel_motor_port = 3
+    back_right_axle_motor_port = 1
 
     controller_port = 0
 
-    test_port.run_motor_port = 6
-    test_port.turn_motor_port = 7
+    test_wheel_motor_port = 6
+    test_axle_motor_port = 7
+
+    WHEEL_JOINT_GEAR_RATIO = 6.75 #8.14
+    AXLE_JOINT_GEAR_RATIO = 150.0/7.0
+    TICKS_PER_REV = 2048
+    TICKS_PER_RAD = TICKS_PER_REV / (2 * math.pi)
+
 
 class MotorType(Enum):
-    RUN_MOTOR = auto()
-    TURN_MOTOR = auto()
+    wheel_motor = auto()
+    axle_motor = auto()
 
 class SwerveModule():
     
-    def __init__(self, swerve_port: SwervePort) -> None:
-        self.run_motor = ctre.TalonFX(swerve_port.run_motor_port)
-        self.turn_motor = ctre.TalonFX(swerve_port.turn_motor_port)
+    def __init__(self, axle_joint_name, axle_joint_port, wheel_joint_name, wheel_joint_port) -> None:
+        self.wheel_motor = ctre.TalonFX(wheel_joint_port)
+        self.axle_motor = ctre.TalonFX(axle_joint_port)
+        self.wheel_joint_name = wheel_joint_name
+        self.axle_joint_name = axle_joint_name
+        self.wheel_joint_port = wheel_joint_port
+        self.axle_joint_port = axle_joint_port
 
-        self.run_motor.configFactoryDefault()
-        self.run_motor.configNeutralDeadband(0.001)
-        self.run_motor.configSelectedFeedbackSensor(ctre.TalonFXFeedbackDevice.IntegratedSensor, 0, 30)
-        self.run_motor.configNominalOutputForward(0, 30)
-        self.run_motor.configNominalOutputReverse(0, 30)
-        self.run_motor.configPeakOutputForward(1, 30)
-        self.run_motor.configPeakOutputReverse(-1, 30)
         self.kf = 1023.0/20660.0
         self.kp = 0.1
         self.ki = 0.001
         self.kd = 5
-        self.run_motor.config_kF(0, self.kf, 30)
-        self.run_motor.config_kP(0, self.kp, 30)
-        self.run_motor.config_kI(0, self.ki, 30)
-        self.run_motor.config_kD(0, self.kd, 30)
 
-        self.turn_motor.configFactoryDefault()
-        self.turn_motor.configNeutralDeadband(0.001)
-        self.turn_motor.configSelectedFeedbackSensor(ctre.TalonFXFeedbackDevice.IntegratedSensor, 0, 30)
-        self.turn_motor.configNominalOutputForward(0, 30)
-        self.turn_motor.configNominalOutputReverse(0, 30)
-        self.turn_motor.configPeakOutputForward(1, 30)
-        self.turn_motor.configPeakOutputReverse(-1, 30)
-        self.turn_motor.config_kF(0, self.kf, 30)
-        self.turn_motor.config_kP(0, self.kp, 30)
-        self.turn_motor.config_kI(0, self.ki, 30)
-        self.turn_motor.config_kD(0, self.kd, 30)
+        self.wheel_motor.configFactoryDefault()
+        self.wheel_motor.configNeutralDeadband(0.001)
+        self.wheel_motor.configSelectedFeedbackSensor(ctre.TalonFXFeedbackDevice.IntegratedSensor, 0, 30)
+        self.wheel_motor.configNominalOutputForward(0, 30)
+        self.wheel_motor.configNominalOutputReverse(0, 30)
+        self.wheel_motor.configPeakOutputForward(1, 30)
+        self.wheel_motor.configPeakOutputReverse(-1, 30)
+        self.wheel_motor.config_kF(0, self.kf, 30)
+        self.wheel_motor.config_kP(0, self.kp, 30)
+        self.wheel_motor.config_kI(0, self.ki, 30)
+        self.wheel_motor.config_kD(0, self.kd, 30)
 
-    def convert(self, angular_vel):
-        TICKS_PER_REV = 2048
-        TICKS_PER_RAD = TICKS_PER_REV / (2 * math.pi)
-        scaled_vel = TICKS_PER_RAD * angular_vel / 10.0
+        self.axle_motor.configFactoryDefault()
+        self.axle_motor.configNeutralDeadband(0.001)
+        self.axle_motor.configSelectedFeedbackSensor(ctre.TalonFXFeedbackDevice.IntegratedSensor, 0, 30)
+        self.axle_motor.configNominalOutputForward(0, 30)
+        self.axle_motor.configNominalOutputReverse(0, 30)
+        self.axle_motor.configPeakOutputForward(1, 30)
+        self.axle_motor.configPeakOutputReverse(-1, 30)
+        self.axle_motor.config_kF(0, self.kf, 30)
+        self.axle_motor.config_kP(0, self.kp, 30)
+        self.axle_motor.config_kI(0, self.ki, 30)
+        self.axle_motor.config_kD(0, self.kd, 30)
+
+
+    def convertToTicks(self, angular_vel):
+        scaled_vel = Constants.TICKS_PER_RAD * angular_vel / 10.0
 
         return scaled_vel
+ 
+    def scaleAxleVelocity(self, ticks_per_100ms):
+        scaled_vel = ticks_per_100ms * Constants.AXLE_JOINT_GEAR_RATIO
+        return scaled_vel
 
-    def setVelocity(self, run_motor_vel, turn_motor_vel):
-        scaled_vel = self.convert(run_motor_vel)
-        scaled_vel2 = self.convert(turn_motor_vel)
-        self.run_motor.set(ctre.TalonFXControlMode.Velocity, scaled_vel)
-        self.turn_motor.set(ctre.TalonFXControlMode.Velocity, scaled_vel2)
+    def scaleWheelVelocity(self, ticks_per_100ms):
+        scaled_vel = ticks_per_100ms * Constants.WHEEL_JOINT_GEAR_RATIO
+        return scaled_vel
+
+    def setVelocities(self, wheel_motor_vel, axle_motor_vel):
+        print(f'WHEEL_NAME - {self.wheel_joint_name}, WHEEL_PORT - {self.wheel_joint_port}')
+        print(f'SETTING VELOCITIES: WHEEL - {wheel_motor_vel}, AXLE - {axle_motor_vel}')
+        wheel_vel = self.convertToTicks(self.scaleWheelVelocity(wheel_motor_vel - axle_motor_vel/1.9)) #(2-(wheel_motor_vel/(66*math.pi)))
+        axle_vel = self.convertToTicks(self.scaleAxleVelocity(axle_motor_vel))
+        self.wheel_motor.set(ctre.TalonFXControlMode.Velocity, wheel_vel)
+        self.axle_motor.set(ctre.TalonFXControlMode.Velocity, axle_vel)
 
     def stop(self):
-        self.run_motor.set(ctre.TalonFXControlMode.PercentOutput, 0)
-        self.turn_motor.set(ctre.TalonFXControlMode.PercentOutput, 0)
+        self.wheel_motor.set(ctre.TalonFXControlMode.PercentOutput, 0)
+        self.axle_motor.set(ctre.TalonFXControlMode.PercentOutput, 0)
 
-    def getEncoderInfo(self, type: MotorType):
-        if type == MotorType.RUN_MOTOR:
-            return {"position": self.run_motor.getSensorCollection().getIntegratedSensorPosition(), "velocity": self.run_motor.getSensorCollection().getIntegratedSensorVelocity()}
-        elif type == MotorType.TURN_MOTOR:
-            return {"position": self.turn_motor.getSensorCollection().getIntegratedSensorPosition(), "velocity": self.turn_motor.getSensorCollection().getIntegratedSensorVelocity()}
+    def convertToRadians(self, ticks):
+        return ticks * 10 / Constants.TICKS_PER_RAD
+
+    def getEncoderInfo(self):
+            output = \
+            {
+                "wheel_joint": 
+                    {
+                        "name": self.wheel_joint_name,
+                        "position": self.convertToRadians(self.wheel_motor.getSensorCollection().getIntegratedSensorPosition()) % math.pi, 
+                        "velocity": self.convertToRadians(self.wheel_motor.getSensorCollection().getIntegratedSensorVelocity())
+                    },
+                "axle_joint":
+                    {
+                        "name": self.axle_joint_name,
+                        "position": self.convertToRadians(self.axle_motor.getSensorCollection().getIntegratedSensorPosition()) % math.pi,
+                        "velocity": self.convertToRadians(self.axle_motor.getSensorCollection().getIntegratedSensorVelocity())
+                    }
+            }
+            return output
+            # return {"position": self.axle_motor.getSensorCollection().getIntegratedSensorPosition(), "velocity": self.axle_motor.getSensorCollection().getIntegratedSensorVelocity()}
 
 class DriveTrain():
     def __init__(self):
-        self.front_left = SwerveModule(Constants.front_left_port)
-        self.front_right = SwerveModule(Constants.front_right_port)
-        self.back_left = SwerveModule(Constants.back_left_port)
-        self.back_right = SwerveModule(Constants.back_right_port)
-        # self.test = SwerveModule(Constants.test_port)
+        self.front_left = SwerveModule("front_left_axle_joint", Constants.front_left_axle_motor_port, "front_left_wheel_joint", Constants.front_left_wheel_motor_port)
+        self.front_right = SwerveModule("front_right_axle_joint", Constants.front_right_axle_motor_port, "front_right_wheel_joint", Constants.front_right_wheel_motor_port)
+        self.back_left = SwerveModule("rear_left_axle_joint", Constants.back_left_axle_motor_port, "rear_left_wheel_joint", Constants.back_left_wheel_motor_port)
+        self.back_right = SwerveModule("rear_right_axle_joint", Constants.back_right_axle_motor_port, "rear_right_wheel_joint", Constants.back_right_wheel_motor_port)
+
         self.controller = wpilib.XboxController(Constants.controller_port)
-        self.last_command_vel = 100000.0
-        self.joints = \
+        # self.joints = \
+        # {
+        #     'front_left_wheel_joint': self.front_left.wheel_motor,
+        #     'front_left_axle_joint': self.front_left.axle_motor,
+        #     'front_right_wheel_joint': self.front_right.wheel_motor,
+        #     'front_right_axle_joint': self.front_right.axle_motor,
+        #     'rear_left_wheel_joint': self.back_left.wheel_motor,
+        #     'rear_left_axle_joint': self.back_left.axle_motor,
+        #     'rear_right_wheel_joint': self.back_right.wheel_motor,
+        #     'rear_right_axle_joint': self.back_right.axle_motor,
+        # }
+        self.module_lookup = \
         {
-            'front_left_wheel_joint': self.front_left.run_motor,
-            'front_left_axle_joint': self.front_left.turn_motor,
-            'front_right_wheel_joint': self.front_right.run_motor,
-            'front_right_axle_joint': self.front_right.turn_motor,
-            'rear_left_wheel_joint': self.back_left.run_motor,
-            'rear_left_axle_joint': self.back_left.turn_motor,
-            'rear_right_wheel_joint': self.back_right.run_motor,
-            'rear_right_axle_joint': self.back_right.turn_motor,
+            'front_left_axle_joint': self.front_left,
+            'front_right_axle_joint': self.front_right,
+            'rear_left_axle_joint': self.back_left,
+            'rear_right_axle_joint': self.back_right,
+
         }
 
-        # self.test_motor = ctre.TalonFX(Constants.test_port)
-        # self.test_motor.configFactoryDefault()
-        # self.test_motor.configNeutralDeadband(0.001)
-        # self.test_motor.configSelectedFeedbackSensor(ctre.TalonFXFeedbackDevice.IntegratedSensor, 0, 30)
-        # self.test_motor.configNominalOutputForward(0, 30)
-        # self.test_motor.configNominalOutputReverse(0, 30)
-        # self.test_motor.configPeakOutputForward(1, 30)
-        # self.test_motor.configPeakOutputReverse(-1, 30)
-        # self.kf = 1023.0/20660.0
-        # self.kp = 0.1
-        # self.ki = 0.001
-        # self.kd = 5
-        # self.test_motor.config_kF(0, self.kf, 30)
-        # self.test_motor.config_kP(0, self.kp, 30)
-        # self.test_motor.config_kI(0, self.ki, 30)
-        # self.test_motor.config_kD(0, self.kd, 30)
-
-        # self.test_motor_2 = ctre.TalonFX(Constants.test_port_2)
-        # self.test_motor_2.configFactoryDefault()
-        # self.test_motor_2.configNeutralDeadband(0.001)
-        # self.test_motor_2.configSelectedFeedbackSensor(ctre.TalonFXFeedbackDevice.IntegratedSensor, 0, 30)
-        # self.test_motor_2.configNominalOutputForward(0, 30)
-        # self.test_motor_2.configNominalOutputReverse(0, 30)
-        # self.test_motor_2.configPeakOutputForward(1, 30)
-        # self.test_motor_2.configPeakOutputReverse(-1, 30)
-        # self.test_motor_2.config_kF(0, self.kf, 30)
-        # self.test_motor_2.config_kP(0, self.kp, 30)
-        # self.test_motor_2.config_kI(0, self.ki, 30)
-        # self.test_motor_2.config_kD(0, self.kd, 30)
-
-    def setVelocities(self, run_motor_velocities: list, turn_motor_velocities: list):
-        #TODO: fix order
-        if len(run_motor_velocities) != 0 or len(turn_motor_velocities) != 0:
-            self.front_left.setVelocity(run_motor_velocities[0], turn_motor_velocities[0])
-            self.front_right.setVelocity(run_motor_velocities[1], turn_motor_velocities[1])
-            self.back_left.setVelocity(run_motor_velocities[2], run_motor_velocities[2])
-            self.back_right.setVelocity(run_motor_velocities[3], run_motor_velocities[3])
-
     def getEncoderInfo(self):
-        run_motor_velocities = []
-        run_motor_velocities.append(self.front_left.getEncoderInfo(MotorType.RUN_MOTOR)['velocity'])
-        run_motor_velocities.append(self.front_right.getEncoderInfo(MotorType.RUN_MOTOR)['velocity'])
-        run_motor_velocities.append(self.back_left.getEncoderInfo(MotorType.RUN_MOTOR)['velocity'])
-        run_motor_velocities.append(self.back_right.getEncoderInfo(MotorType.RUN_MOTOR)['velocity'])
-
-        turn_motor_velocities = []
-        turn_motor_velocities.append(self.front_left.getEncoderInfo(MotorType.TURN_MOTOR)['velocity'])
-        turn_motor_velocities.append(self.front_right.getEncoderInfo(MotorType.TURN_MOTOR)['velocity'])
-        turn_motor_velocities.append(self.back_left.getEncoderInfo(MotorType.TURN_MOTOR)['velocity'])
-        turn_motor_velocities.append(self.back_right.getEncoderInfo(MotorType.TURN_MOTOR)['velocity'])
-
-        run_motor_positions = []
-        run_motor_positions.append(self.front_left.getEncoderInfo(MotorType.RUN_MOTOR)['position'])
-        run_motor_positions.append(self.front_right.getEncoderInfo(MotorType.RUN_MOTOR)['position'])
-        run_motor_positions.append(self.back_left.getEncoderInfo(MotorType.RUN_MOTOR)['position'])
-        run_motor_positions.append(self.back_right.getEncoderInfo(MotorType.RUN_MOTOR)['position'])
-    
-        turn_motor_positions = []
-        turn_motor_positions.append(self.front_left.getEncoderInfo(MotorType.TURN_MOTOR)['position'])
-        turn_motor_positions.append(self.front_right.getEncoderInfo(MotorType.TURN_MOTOR)['position'])
-        turn_motor_positions.append(self.back_left.getEncoderInfo(MotorType.TURN_MOTOR)['position'])
-        turn_motor_positions.append(self.back_right.getEncoderInfo(MotorType.TURN_MOTOR)['position'])
-
-        velocities = run_motor_velocities + turn_motor_positions
-        positions = run_motor_positions + turn_motor_positions
-        return {'position': positions, 'velocity': velocities}
+        output = \
+        {
+            'front_left': self.front_left.getEncoderInfo(),
+            'front_right': self.front_right.getEncoderInfo(),
+            'back_left': self.back_left.getEncoderInfo(),
+            'back_right': self.back_right.getEncoderInfo()
+        }
+        return output
 
     def setTestVelocity(self, test_velocity, test_velocity2):
-        scaled_vel = self.convert(test_velocity)
-        scaled_vel2 = self.convert(test_velocity2)
+        scaled_vel = self.convertToTicks(test_velocity)
+        scaled_vel2 = self.convertToTicks(test_velocity2)
         # self.test_motor.set(ctre.TalonFXControlMode.PercentOutput, test_velocity)
         # self.test_motor_2.set(ctre.TalonFXControlMode.PercentOutput, test_velocity2)
         # self.test.setVelocity(test_velocity, test_velocity2)
@@ -198,23 +180,13 @@ class DriveTrain():
         # self.test_motor.set(ctre.TalonFXControlMode.PercentOutput, 0)
         # self.test_motor_2.set(ctre.TalonFXControlMode.PercentOutput, 0)
 
-    def convert(self, angular_vel):
-        TICKS_PER_REV = 2048
-        TICKS_PER_RAD = TICKS_PER_REV / (2 * math.pi)
-        scaled_vel = TICKS_PER_RAD * angular_vel / 10.0
-
-        return scaled_vel
 
     def setDynamicVelocities(self, commands):
-        vel_control_mode = ctre.TalonFXControlMode.Velocity
         if commands:
             for command in commands:
-                name = command['name']
-                motor = self.joints[name]
-                vel = command['velocity']
-                if self.last_command_vel != vel:
-                    motor.set(vel_control_mode, self.convert(vel))
-                    self.last_command_vel = vel
+                module_axle_name = command['axle_joint']['name']
+                module = self.module_lookup[module_axle_name]
+                module.setVelocities(command['wheel_joint']['velocity'], command['axle_joint']['velocity'])
 
     def getTestEncoderInfo(self):
         return self.test_motor.getSensorCollection().getIntegratedSensorPosition(), self.test_motor.getSensorCollection().getIntegratedSensorVelocity()

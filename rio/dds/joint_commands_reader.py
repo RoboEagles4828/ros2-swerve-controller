@@ -22,6 +22,7 @@ class JointCommandsReader:
         header = list()
         velocity = list()
         names = list()
+        module_cmds = list()
         if time.time() - self.last > 1:
             self.last = time.time()
             return 'HALT'
@@ -41,8 +42,15 @@ class JointCommandsReader:
         if names:
             for i, name in enumerate(names):
                 cmds.append({'name': name, 'velocity': velocity[i]})
+            
+            for axle_cmd in filter(lambda x: 'axle' in x['name'], cmds):
+                wheel_joint_name = axle_cmd['name'].replace('axle', 'wheel')
+                wheel_cmd = next(filter(lambda x: x['name'] == wheel_joint_name, cmds))
+                module_cmd = {'wheel_joint': wheel_cmd, 'axle_joint': axle_cmd}       
+                module_cmds.append(module_cmd)  
+
             # print(cmds)
-        return cmds
+        return module_cmds
 
     # def closeConnector(self):
     #     print("CLOSING JOINT COMMANDS CONNECTOR")
